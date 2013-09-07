@@ -1,0 +1,20 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{6989167D-11E4-40FE-8C1A-2192A86A7E90}") = "RBC_FORTRAN", "RBC_FORTRAN\RBC_FORTRAN.vfproj", "{DFD89DE0-757E-4FA5-BCAD-0663481F6236}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{DFD89DE0-757E-4FA5-BCAD-0663481F6236}.Debug|Win32.ActiveCfg = Debug|Win32
+		{DFD89DE0-757E-4FA5-BCAD-0663481F6236}.Debug|Win32.Build.0 = Debug|Win32
+		{DFD89DE0-757E-4FA5-BCAD-0663481F6236}.Release|Win32.ActiveCfg = Release|Win32
+		{DFD89DE0-757E-4FA5-BCAD-0663481F6236}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
