@@ -1,0 +1,226 @@
+
+\documentclass[a4paper,12pt]{article}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{eurosym}
+\usepackage{latexsym}
+\usepackage{graphicx}
+\usepackage{longtable}
+\usepackage{portland}
+\usepackage{lscape}
+\usepackage[onehalfspacing]{setspace}
+\usepackage{footmisc}
+\usepackage{fancyhdr}
+\usepackage{hyphenat}
+\usepackage{rotating}
+\usepackage[USenglish]{babel}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{chicago}
+\usepackage{theorem}
+\usepackage{multirow}
+\usepackage{epstopdf}
+\usepackage[left=1in,right=1in,top=1in,bottom=1in]{geometry}
+
+\setcounter{MaxMatrixCols}{10}
+%TCIDATA{OutputFilter=Latex.dll}
+%TCIDATA{Version=5.00.0.2606}
+%TCIDATA{<META NAME="SaveForMode" CONTENT="1">}
+%TCIDATA{BibliographyScheme=Manual}
+%TCIDATA{LastRevised=Saturday, September 07, 2013 20:04:57}
+%TCIDATA{<META NAME="GraphicsSave" CONTENT="32">}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{acknowledgement}[theorem]{Acknowledgement}
+\newtheorem{algorithm}[theorem]{Algorithm}
+\newtheorem{assum}{Assumption}
+\newtheorem{axiom}[theorem]{Axiom}
+\newtheorem{case}[theorem]{Case}
+\newtheorem{claim}[theorem]{Claim}
+\newtheorem{conclusion}[theorem]{Conclusion}
+\newtheorem{condition}[theorem]{Condition}
+\newtheorem{conjecture}[theorem]{Conjecture}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{criterion}[theorem]{Criterion}
+\newtheorem{definition}{Definition}
+\newtheorem{example}[theorem]{Example}
+\newtheorem{exercise}[theorem]{Exercise}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{notation}[theorem]{Notation}
+\newtheorem{problem}[theorem]{Problem}
+\newtheorem{proposition}{Proposition}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{solution}[theorem]{Solution}
+\newtheorem{summary}[theorem]{Summary}
+\newtheorem{observation}{Observation}
+\newtheorem{result}{Result}
+\input{tcilatex}
+
+\begin{document}
+
+\title{REal Business Cycle with endogenous labour choice}
+\author{Matthias Sch\"{o}n\thanks{%
+CMR, University of Cologne; Albertus-Magnus-Platz; 50923 K\"{o}ln; Germany;
+E-mail: m.schoen@wiso.uni-koeln.de}}
+\date{\today }
+\maketitle
+
+\begin{abstract}
+This is documetation to the homework for the course quantitative Macro
+Theory by Jesus Fernandez Villaverde. It contains the theoretical foundation
+of the model and and a short description of the programs that are also
+provided. I choose to code in Matlab and Fortran.
+\end{abstract}
+
+\newpage \pagenumbering{arabic} \renewcommand{\thefootnote}{%
+\arabic{footnote}} \setcounter{footnote}{0}
+
+\section*{Description of the RBC Model}
+
+Consider a simple RBC model consisting of a representative household whose
+utility is given by 
+\begin{equation*}
+U=\sum_{t=1}^{T}\beta ^{t-1}u\left( c_{t},1-l_{t}\right) ,
+\end{equation*}%
+where c is consumption and l is time spend in production. 
+
+The household has a constant returns to scale technology for producing
+output given by 
+\begin{equation*}
+y_{t}=z_{t}k_{t}^{\alpha }l_{t}^{1-\alpha }
+\end{equation*}
+where $k_{t}$ ist capital and $z_{t}$is a productivity parameter follwing an
+AR(1) process. It also faces a budget constraint 
+\begin{equation*}
+k_{t+1}=\left( 1-\delta \right) k_{t}+y_{t}-c_{t}.
+\end{equation*}
+
+The constraints collapses to 
+\begin{equation*}
+k_{t+1}=\left( 1-\delta \right) k_{t}+z_{t}k_{t}^{\alpha }l_{t}^{1-\alpha
+}-c_{t}.
+\end{equation*}%
+Let $\lambda _{t}$ be the multiplier of this constraint and form 
+\begin{equation*}
+V\left( k_{t},z_{t}\right) =u\left( c_{t},1-l_{t}\right) +\beta E_{t}V\left(
+k_{t+1},z_{t+1}\right) +\lambda _{t}\left( \left( 1-\delta \right)
+k_{t}+z_{t}k_{t}^{\alpha }l_{t}^{1-\alpha }-c_{t}-k_{t+1}\right) .
+\end{equation*}%
+The first order condition for c is%
+\begin{equation}
+\frac{\partial u}{\partial c_{t}}-\lambda _{t}\left( -1\right)
+=0\Leftrightarrow \frac{\partial u}{\partial c}=\lambda _{t}  \tag{I}
+\label{I}
+\end{equation}%
+The first order condition for l is%
+\begin{equation}
+\frac{\partial u}{\partial l_{t}}+\lambda _{t}z_{t}\left( 1-\alpha \right)
+k_{t}^{\alpha }l_{t}^{-\alpha }=0  \tag{II}  \label{II}
+\end{equation}%
+The first order condition for $k_{t+1}$is 
+\begin{equation}
+\beta E_{t}\frac{\partial V}{\partial k}\left( k_{t+1},z_{t+1}\right)
++\lambda _{t}\left( -1\right) =0\Leftrightarrow \lambda _{t}=\beta E_{t}%
+\frac{\partial V}{\partial k}\left( k_{t+1},z_{t+1}\right) .  \tag{III}
+\label{III}
+\end{equation}%
+The envelope condition is 
+\begin{equation}
+\frac{\partial V}{\partial k}\left( k_{t},z_{t}\right) =\lambda _{t}\left(
+\left( 1-\delta \right) +z_{t}\alpha k_{t}^{\alpha -1}l_{t}^{1-\alpha
+}\right)   \tag{IV}  \label{IV}
+\end{equation}
+
+If we combine \ref{I} and \ref{II} yields%
+\begin{equation}
+-\frac{\partial u}{\partial l_{t}}=\frac{\partial u}{\partial c}z_{t}\left(
+1-\alpha \right) k_{t}^{\alpha }l_{t}^{-\alpha }  \tag{V}  \label{V}
+\end{equation}%
+Combine \ref{I} and \ref{III} to get%
+\begin{equation}
+\frac{\partial u}{\partial c}=\beta E_{t}\frac{\partial V}{\partial k}\left(
+k_{t+1},z_{t+1}\right)   \tag{VI}  \label{VI}
+\end{equation}%
+Shitfing \ref{IV} forward one period in time and taking expectations gives%
+\begin{equation}
+E_{t}\frac{\partial V}{\partial k}\left( k_{t+1},z_{t+1}\right)
+=E_{t}\lambda _{t+1}\left( \left( 1-\delta \right) +z_{t+1}\alpha
+k_{t+1}^{\alpha -1}l_{t+1}^{1-\alpha }\right)   \tag{VII}  \label{VII}
+\end{equation}
+
+Now let assume that $u\left( c_{t},1-l_{t}\right) =\log (c_{t})$-$\psi \frac{%
+l^{2}}{2}$ and $f(k_{t},l_{t})=k^{\alpha }l^{1-\alpha }$. Equation \ref{VI}
+becomes  
+\begin{equation*}
+\frac{1}{c_{t}}=\beta E_{t}\frac{\partial V}{\partial k}\left(
+k_{t+1},z_{t+1}\right) 
+\end{equation*}
+
+Equation \ref{V} becomes 
+\begin{equation*}
+\psi l_{t}=\frac{1}{c_{t}}z_{t}\left( 1-\alpha \right) k_{t}^{\alpha
+}l_{t}^{-\alpha }
+\end{equation*}%
+and \ref{VII} 
+\begin{equation*}
+E_{t}\frac{\partial V}{\partial k}\left( k_{t+1},z_{t+1}\right) =E_{t}\frac{1%
+}{c_{t+1}}\left( \left( 1-\delta \right) +z_{t+1}\alpha k_{t+1}^{\alpha
+-1}l_{t+1}^{1-\alpha }\right) 
+\end{equation*}%
+Combing them yields%
+\begin{equation*}
+\frac{1}{c_{t}}=\beta E_{t}\frac{1}{c_{t+1}}\left( \left( 1-\delta \right)
++z_{t+1}\alpha k_{t+1}^{\alpha -1}l_{t+1}^{1-\alpha }\right) 
+\end{equation*}
+
+In the nonstochastic steady state holds $c=c_{t}=c_{t+1}$, $k=k_{t}=k_{t+1}$%
+, $l=l_{t}=l_{t+1}$ and $z_{t+1}=z_{t+1}=1.$ 
+\begin{eqnarray*}
+\frac{1}{c} &=&\frac{1}{c}\beta \left( \left( 1-\delta \right) +\alpha
+k^{\alpha -1}l^{1-\alpha }\right)  \\
+k &=&\left( \frac{\alpha \beta }{1-\beta +\beta \delta }\right) ^{\frac{1}{%
+1-\alpha }}l\Leftrightarrow \frac{k}{l}=\left( \frac{\alpha \beta }{1-\beta
++\beta \delta }\right) ^{\frac{1}{1-\alpha }}
+\end{eqnarray*}%
+and 
+\begin{equation*}
+c=\frac{\left( 1-\alpha \right) }{\psi }\left( \frac{k}{l}\right) ^{\alpha
+}l^{-1}=\frac{\left( 1-\alpha \right) }{\psi }\left( \frac{\alpha \beta }{%
+1-\beta +\beta \delta }\right) ^{\frac{\alpha }{1-\alpha }}l^{-1}
+\end{equation*}%
+Pluging in this in the budget constraint we can compute the steady state
+values of capital labour and consumption.%
+\begin{eqnarray*}
+k &=&\left( 1-\delta \right) k+k^{\alpha }l^{1-\alpha }-c \\
+\delta k &=&k^{\alpha }l^{1-\alpha }-c \\
+\delta \left( \frac{\alpha \beta }{1-\beta +\beta \delta }\right) ^{\frac{1}{%
+1-\alpha }}l &=&\left( \left( \frac{\alpha \beta }{1-\beta +\beta \delta }%
+\right) ^{\frac{1}{1-\alpha }}l\right) ^{\alpha }l^{1-\alpha }-\frac{\left(
+1-\alpha \right) }{\psi }\left( \frac{k}{l}\right) ^{\alpha }l^{-1} \\
+l_{ss} &=&\left( \frac{\left( 1-\alpha \right) }{\psi }\frac{1}{\left(
+1-\delta \frac{\alpha \beta }{1-\beta +\beta \delta }\right) }\right) ^{1/2}
+\\
+k_{ss} &=&\left( \frac{\alpha \beta }{1-\beta +\beta \delta }\right) ^{\frac{%
+1}{1-\alpha }}\left( \frac{\left( 1-\alpha \right) }{\psi }\frac{1}{\left(
+1-\delta \frac{\alpha \beta }{1-\beta +\beta \delta }\right) }\right) ^{1/2}
+\\
+c &=&\frac{\left( 1-\alpha \right) }{\psi }\left( \frac{\alpha \beta }{%
+1-\beta +\beta \delta }\right) ^{\frac{\alpha }{1-\alpha }}\left( \frac{%
+\left( 1-\alpha \right) }{\psi }\frac{1}{\left( 1-\delta \frac{\alpha \beta 
+}{1-\beta +\beta \delta }\right) }\right) ^{-1/2}
+\end{eqnarray*}%
+For $\psi $ that leads to l$_{ss}$ is%
+\begin{eqnarray*}
+\psi  &=&\frac{\left( 1-\alpha \right) }{l_{ss}^{2}}\frac{1}{\left( 1-\delta 
+\frac{\alpha \beta }{1-\beta +\beta \delta }\right) }=\frac{\left( 1-\frac{1%
+}{3}\right) }{\left( \frac{1}{3}\right) ^{2}}\frac{1}{\left( 1-\frac{9}{100}%
+\frac{\frac{1}{3}\frac{19}{20}}{1-\frac{19}{20}+\frac{19}{20}\frac{9}{100}}%
+\right) } \\
+&=&\frac{\frac{2}{3}}{\frac{1}{9}}\frac{1}{\left( 1-\frac{\frac{171}{6000}}{%
+\frac{271}{2000}}\right) }==6\frac{1}{\left( \frac{214}{271}\right) }=6\frac{%
+271}{214}=\frac{3\ast 271}{107}=\frac{813}{107}=7.598
+\end{eqnarray*}
+
+\end{document}
