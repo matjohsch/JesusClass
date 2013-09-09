@@ -14,11 +14,11 @@ use  grid
 
 implicit none
 
-integer, parameter :: nGridCapital = 100
-integer, parameter :: nGridLabour =50
+integer, parameter :: nGridCapital = 1000
+integer, parameter :: nGridLabour =500
 integer, parameter :: nGridProductivity = 5
 real (8), parameter :: curv=1.0
-real (8), parameter :: tolerance = 0.0000001
+real (8), parameter :: tolerance = 0.000001
   
 integer :: nCapital, nCapitalNextPeriod, gridCapitalNextPeriod, nProductivity, nProductivityNextPeriod
 integer :: nLabour
@@ -46,30 +46,30 @@ integer,dimension(2)::res
 ! 1. Calibration
 !----------------------------------------------------------------
         
-aalpha = 0.33333333333; ! Elasticity of output w.r.t
-bbeta = 0.95 ! Discount factor
-ddelta = 0.09
-labourSteadyState=0.33333333333
-x=(aalpha*bbeta)/(1.0-bbeta+bbeta*ddelta)
-pphi = ((1.0-aalpha)/(labourSteadyState**2))/(1.0-ddelta*x) !6.72
+aalpha = 1/3.0 ! Elasticity of output w.r.t
+bbeta = 0.9500000 ! Discount factor
+ddelta = 0.0900000
+labourSteadyState=1/3.00000
+x=(aalpha*bbeta)/(1.000-bbeta+bbeta*ddelta)
+pphi = ((1.00-aalpha)/(labourSteadyState**2.0))/(1.0-ddelta*x) !6.72
 
 ! Productivity value
 vProductivity = (/0.9792, 0.9896, 1.0000, 1.0106, 1.0212/)
 
 ! Transition matrix
-mTransition = reshape( (/0.9727, 0.0273, 0., 0., 0., &
-0.0041, 0.9806, 0.0153, 0.0, 0.0, &
-0.0, 0.0082, 0.9837, 0.0082, 0.0, &
-0.0, 0.0, 0.0153, 0.9806, 0.0041, &
-0.0, 0.0, 0.0, 0.0273, 0.9727 /), (/5,5/))
+!mTransition = reshape( (/0.9727, 0.0273, 0., 0., 0., &
+!0.0041, 0.9806, 0.0153, 0.0, 0.0, &
+!0.0, 0.0082, 0.9837, 0.0082, 0.0, &
+!0.0, 0.0, 0.0153, 0.9806, 0.0041, &
+!0.0, 0.0, 0.0, 0.0273, 0.9727 /), (/5,5/))
    
-!! Transition matrix
-!mTransition = reshape( (/0.0, 0.0, 1.0, 0.0, 0.0, &
-!0.0, 0.0, 1.0, 0.0, 0.0, &
-!0.0, 0.0, 1.0, 0.0, 0.0, &
-!0.0, 0.0, 1.0, 0.0, 0.0, &
-!0.0, 0.0, 1.0, 0.0, 0.0 /), (/5,5/))
-!mTransition = transpose(mTransition)
+! Transition matrix
+mTransition = reshape( (/0.0, 0.0, 1.0, 0.0, 0.0, &
+0.0, 0.0, 1.0, 0.0, 0.0, &
+0.0, 0.0, 1.0, 0.0, 0.0, &
+0.0, 0.0, 1.0, 0.0, 0.0, &
+0.0, 0.0, 1.0, 0.0, 0.0 /), (/5,5/))
+mTransition = transpose(mTransition)
 
 !----------------------------------------------------------------
 ! 2. Steady state
@@ -131,7 +131,7 @@ do while (maxDifference>tolerance)
                     
                     consumption = (1-ddelta)*vGridCapital(nCapital)+mOutput(nCapital,nLabour,nProductivity)-vGridCapital(nCapitalNextPeriod)
                     
-                    xxx(nLabour,nCapitalNextperiod)  = log(consumption)-pphi*0.5*vGridLabour(nLabour)**2+bbeta*expectedValueFunction(nCapitalNextPeriod,nProductivity) !(1.0-bbeta)*(
+                    xxx(nLabour,nCapitalNextperiod)  = log(consumption)-pphi*0.50*vGridLabour(nLabour)**2.0+bbeta*expectedValueFunction(nCapitalNextPeriod,nProductivity) !(1.0-bbeta)*(
                     !valueProvisional2
                     if (consumption .lt. 0.0) then
                         xxx(nLabour,nCapitalNextPeriod) = -100000.0
@@ -182,12 +182,12 @@ end do
   
 print *, 'Iteration:', iteration, 'Sup Diff:', MaxDifference
 print *, ' '
-print *, 'My check:', mPolicyFunctionCapital(50,3)
+print *, 'My check:', mPolicyFunctionCapital(500,3)
 print *, ' '
-print *, 'My check:', mPolicyFunctionLabour(50,3)
+print *, 'My check:', mPolicyFunctionLabour(500,3)
 print *, ' '
 !total = etime(elapsed)
 !
 !print *, 'Elapsed time is ', elapsed(1)
-!pause
+pause
 end program RBC_F90
