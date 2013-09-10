@@ -29,7 +29,7 @@
 %TCIDATA{Version=5.00.0.2606}
 %TCIDATA{<META NAME="SaveForMode" CONTENT="1">}
 %TCIDATA{BibliographyScheme=Manual}
-%TCIDATA{LastRevised=Saturday, September 07, 2013 20:04:57}
+%TCIDATA{LastRevised=Monday, September 09, 2013 21:34:21}
 %TCIDATA{<META NAME="GraphicsSave" CONTENT="32">}
 
 \newtheorem{theorem}{Theorem}
@@ -56,11 +56,10 @@
 \newtheorem{summary}[theorem]{Summary}
 \newtheorem{observation}{Observation}
 \newtheorem{result}{Result}
-\input{tcilatex}
 
 \begin{document}
 
-\title{REal Business Cycle with endogenous labour choice}
+\title{Steady State Values of RBC with endogenous labour supply}
 \author{Matthias Sch\"{o}n\thanks{%
 CMR, University of Cologne; Albertus-Magnus-Platz; 50923 K\"{o}ln; Germany;
 E-mail: m.schoen@wiso.uni-koeln.de}}
@@ -68,10 +67,11 @@ E-mail: m.schoen@wiso.uni-koeln.de}}
 \maketitle
 
 \begin{abstract}
-This is documetation to the homework for the course quantitative Macro
-Theory by Jesus Fernandez Villaverde. It contains the theoretical foundation
-of the model and and a short description of the programs that are also
-provided. I choose to code in Matlab and Fortran.
+This is part of the first assignment for the course ECON 714-001
+Quantitative Macro Theory by Jesus Fernandez Villaverde. It contains the
+theoretical foundation of the model and and the calculaton of the steady
+state values of leisure to calibrate the model. The programming code for the
+whole model is provided for Matlab and Fortran. 
 \end{abstract}
 
 \newpage \pagenumbering{arabic} \renewcommand{\thefootnote}{%
@@ -84,7 +84,7 @@ utility is given by
 \begin{equation*}
 U=\sum_{t=1}^{T}\beta ^{t-1}u\left( c_{t},1-l_{t}\right) ,
 \end{equation*}%
-where c is consumption and l is time spend in production. 
+where $c$ is consumption and $l$ is time spend in production.
 
 The household has a constant returns to scale technology for producing
 output given by 
@@ -107,120 +107,124 @@ Let $\lambda _{t}$ be the multiplier of this constraint and form
 V\left( k_{t},z_{t}\right) =u\left( c_{t},1-l_{t}\right) +\beta E_{t}V\left(
 k_{t+1},z_{t+1}\right) +\lambda _{t}\left( \left( 1-\delta \right)
 k_{t}+z_{t}k_{t}^{\alpha }l_{t}^{1-\alpha }-c_{t}-k_{t+1}\right) .
-\end{equation*}%
-The first order condition for c is%
+\end{equation*}
+
+The first order condition with respect to $c$ is%
 \begin{equation}
 \frac{\partial u}{\partial c_{t}}-\lambda _{t}\left( -1\right)
-=0\Leftrightarrow \frac{\partial u}{\partial c}=\lambda _{t}  \tag{I}
-\label{I}
+=0\Leftrightarrow \frac{\partial u}{\partial c}=\lambda _{t}  \label{I}
 \end{equation}%
-The first order condition for l is%
+w.r.t. $l$ is%
 \begin{equation}
 \frac{\partial u}{\partial l_{t}}+\lambda _{t}z_{t}\left( 1-\alpha \right)
-k_{t}^{\alpha }l_{t}^{-\alpha }=0  \tag{II}  \label{II}
+k_{t}^{\alpha }l_{t}^{-\alpha }=0  \label{II}
 \end{equation}%
-The first order condition for $k_{t+1}$is 
+w.r.t. $k_{t+1}$is 
 \begin{equation}
 \beta E_{t}\frac{\partial V}{\partial k}\left( k_{t+1},z_{t+1}\right)
 +\lambda _{t}\left( -1\right) =0\Leftrightarrow \lambda _{t}=\beta E_{t}%
-\frac{\partial V}{\partial k}\left( k_{t+1},z_{t+1}\right) .  \tag{III}
-\label{III}
+\frac{\partial V}{\partial k}\left( k_{t+1},z_{t+1}\right) .  \label{III}
 \end{equation}%
 The envelope condition is 
 \begin{equation}
 \frac{\partial V}{\partial k}\left( k_{t},z_{t}\right) =\lambda _{t}\left(
 \left( 1-\delta \right) +z_{t}\alpha k_{t}^{\alpha -1}l_{t}^{1-\alpha
-}\right)   \tag{IV}  \label{IV}
+}\right) .  \label{IV}
 \end{equation}
 
-If we combine \ref{I} and \ref{II} yields%
+If we combine (\ref{I}) and (\ref{II}) yields%
 \begin{equation}
 -\frac{\partial u}{\partial l_{t}}=\frac{\partial u}{\partial c}z_{t}\left(
-1-\alpha \right) k_{t}^{\alpha }l_{t}^{-\alpha }  \tag{V}  \label{V}
+1-\alpha \right) k_{t}^{\alpha }l_{t}^{-\alpha }  \label{V}
 \end{equation}%
-Combine \ref{I} and \ref{III} to get%
+and (\ref{I}) and (\ref{III}) lead to%
 \begin{equation}
 \frac{\partial u}{\partial c}=\beta E_{t}\frac{\partial V}{\partial k}\left(
-k_{t+1},z_{t+1}\right)   \tag{VI}  \label{VI}
+k_{t+1},z_{t+1}\right) .  \label{VI}
 \end{equation}%
-Shitfing \ref{IV} forward one period in time and taking expectations gives%
+Shifting (\ref{IV}) forward one period in time and taking expectations gives%
 \begin{equation}
 E_{t}\frac{\partial V}{\partial k}\left( k_{t+1},z_{t+1}\right)
 =E_{t}\lambda _{t+1}\left( \left( 1-\delta \right) +z_{t+1}\alpha
-k_{t+1}^{\alpha -1}l_{t+1}^{1-\alpha }\right)   \tag{VII}  \label{VII}
+k_{t+1}^{\alpha -1}l_{t+1}^{1-\alpha }\right)   \label{VII}
 \end{equation}
 
 Now let assume that $u\left( c_{t},1-l_{t}\right) =\log (c_{t})$-$\psi \frac{%
-l^{2}}{2}$ and $f(k_{t},l_{t})=k^{\alpha }l^{1-\alpha }$. Equation \ref{VI}
-becomes  
-\begin{equation*}
+l^{2}}{2}$ and $f(k_{t},l_{t})=k^{\alpha }l^{1-\alpha }$. Equation (\ref{VI}%
+) becomes 
+\begin{equation}
 \frac{1}{c_{t}}=\beta E_{t}\frac{\partial V}{\partial k}\left(
-k_{t+1},z_{t+1}\right) 
-\end{equation*}
-
-Equation \ref{V} becomes 
+k_{t+1},z_{t+1}\right)   \label{VIII}
+\end{equation}%
+equation (\ref{V}) becomes 
 \begin{equation*}
 \psi l_{t}=\frac{1}{c_{t}}z_{t}\left( 1-\alpha \right) k_{t}^{\alpha
 }l_{t}^{-\alpha }
 \end{equation*}%
-and \ref{VII} 
-\begin{equation*}
+and (\ref{VII}) 
+\begin{equation}
 E_{t}\frac{\partial V}{\partial k}\left( k_{t+1},z_{t+1}\right) =E_{t}\frac{1%
 }{c_{t+1}}\left( \left( 1-\delta \right) +z_{t+1}\alpha k_{t+1}^{\alpha
--1}l_{t+1}^{1-\alpha }\right) 
-\end{equation*}%
-Combing them yields%
+-1}l_{t+1}^{1-\alpha }\right)   \label{IX}
+\end{equation}%
+Combing (\ref{VIII}) and (\ref{IX})yields%
 \begin{equation*}
 \frac{1}{c_{t}}=\beta E_{t}\frac{1}{c_{t+1}}\left( \left( 1-\delta \right)
 +z_{t+1}\alpha k_{t+1}^{\alpha -1}l_{t+1}^{1-\alpha }\right) 
 \end{equation*}
 
 In the nonstochastic steady state holds $c=c_{t}=c_{t+1}$, $k=k_{t}=k_{t+1}$%
-, $l=l_{t}=l_{t+1}$ and $z_{t+1}=z_{t+1}=1.$ 
-\begin{eqnarray*}
+, $l=l_{t}=l_{t+1}$ and $z_{t}=z_{t+1}=1$. So we can write the steady state
+equations as  
+\begin{eqnarray}
 \frac{1}{c} &=&\frac{1}{c}\beta \left( \left( 1-\delta \right) +\alpha
-k^{\alpha -1}l^{1-\alpha }\right)  \\
+k^{\alpha -1}l^{1-\alpha }\right)   \notag \\
 k &=&\left( \frac{\alpha \beta }{1-\beta +\beta \delta }\right) ^{\frac{1}{%
 1-\alpha }}l\Leftrightarrow \frac{k}{l}=\left( \frac{\alpha \beta }{1-\beta
-+\beta \delta }\right) ^{\frac{1}{1-\alpha }}
-\end{eqnarray*}%
++\beta \delta }\right) ^{\frac{1}{1-\alpha }}  \label{X}
+\end{eqnarray}%
 and 
-\begin{equation*}
+\begin{equation}
 c=\frac{\left( 1-\alpha \right) }{\psi }\left( \frac{k}{l}\right) ^{\alpha
 }l^{-1}=\frac{\left( 1-\alpha \right) }{\psi }\left( \frac{\alpha \beta }{%
-1-\beta +\beta \delta }\right) ^{\frac{\alpha }{1-\alpha }}l^{-1}
-\end{equation*}%
-Pluging in this in the budget constraint we can compute the steady state
-values of capital labour and consumption.%
-\begin{eqnarray*}
-k &=&\left( 1-\delta \right) k+k^{\alpha }l^{1-\alpha }-c \\
-\delta k &=&k^{\alpha }l^{1-\alpha }-c \\
+1-\beta +\beta \delta }\right) ^{\frac{\alpha }{1-\alpha }}l^{-1}  \label{XI}
+\end{equation}%
+By pluging \ref{X} and \ref{XI} in the budget constraint 
+\begin{equation*}
 \delta \left( \frac{\alpha \beta }{1-\beta +\beta \delta }\right) ^{\frac{1}{%
-1-\alpha }}l &=&\left( \left( \frac{\alpha \beta }{1-\beta +\beta \delta }%
+1-\alpha }}l=\left( \left( \frac{\alpha \beta }{1-\beta +\beta \delta }%
 \right) ^{\frac{1}{1-\alpha }}l\right) ^{\alpha }l^{1-\alpha }-\frac{\left(
-1-\alpha \right) }{\psi }\left( \frac{k}{l}\right) ^{\alpha }l^{-1} \\
-l_{ss} &=&\left( \frac{\left( 1-\alpha \right) }{\psi }\frac{1}{\left(
-1-\delta \frac{\alpha \beta }{1-\beta +\beta \delta }\right) }\right) ^{1/2}
+1-\alpha \right) }{\psi }\left( \frac{k}{l}\right) ^{\alpha }l^{-1}
+\end{equation*}%
+we can now compute the steady state values of labour, capital, consumption
+and output.%
+\begin{eqnarray*}
+l_{ss} &=&\left[ \frac{\left( 1-\alpha \right) }{\psi }\frac{1}{\left(
+1-\delta \frac{\alpha \beta }{1-\beta +\beta \delta }\right) }\right] ^{1/2}
 \\
 k_{ss} &=&\left( \frac{\alpha \beta }{1-\beta +\beta \delta }\right) ^{\frac{%
-1}{1-\alpha }}\left( \frac{\left( 1-\alpha \right) }{\psi }\frac{1}{\left(
-1-\delta \frac{\alpha \beta }{1-\beta +\beta \delta }\right) }\right) ^{1/2}
-\\
-c &=&\frac{\left( 1-\alpha \right) }{\psi }\left( \frac{\alpha \beta }{%
-1-\beta +\beta \delta }\right) ^{\frac{\alpha }{1-\alpha }}\left( \frac{%
-\left( 1-\alpha \right) }{\psi }\frac{1}{\left( 1-\delta \frac{\alpha \beta 
-}{1-\beta +\beta \delta }\right) }\right) ^{-1/2}
-\end{eqnarray*}%
-For $\psi $ that leads to l$_{ss}$ is%
+1}{1-\alpha }}l_{ss} \\
+c_{ss} &=&\frac{\left( 1-\alpha \right) }{\psi }\left( \frac{\alpha \beta }{%
+1-\beta +\beta \delta }\right) ^{\frac{\alpha }{1-\alpha }}l_{ss}^{-1} \\
+y_{ss} &=&\left( \frac{\alpha \beta }{1-\beta +\beta \delta }\right) ^{\frac{%
+\alpha }{1-\alpha }}l_{ss}
+\end{eqnarray*}
+As we want to have a steady state labour supply of 1/3 we have to calibrate
+the utility parameter $\psi $ accordingly. By rearranging the steady state
+equation for labour we get%
+\begin{equation*}
+\psi =\frac{\left( 1-\alpha \right) }{l_{ss}^{2}}\frac{1}{\left( 1-\delta 
+\frac{\alpha \beta }{1-\beta +\beta \delta }\right) }.
+\end{equation*}%
+Plugging in the parameter values and and $l_{ss}=1/3$ yields 
+\begin{equation*}
+\psi =7.5981.
+\end{equation*}%
+The corresponding other steady state values are 
 \begin{eqnarray*}
-\psi  &=&\frac{\left( 1-\alpha \right) }{l_{ss}^{2}}\frac{1}{\left( 1-\delta 
-\frac{\alpha \beta }{1-\beta +\beta \delta }\right) }=\frac{\left( 1-\frac{1%
-}{3}\right) }{\left( \frac{1}{3}\right) ^{2}}\frac{1}{\left( 1-\frac{9}{100}%
-\frac{\frac{1}{3}\frac{19}{20}}{1-\frac{19}{20}+\frac{19}{20}\frac{9}{100}}%
-\right) } \\
-&=&\frac{\frac{2}{3}}{\frac{1}{9}}\frac{1}{\left( 1-\frac{\frac{171}{6000}}{%
-\frac{271}{2000}}\right) }==6\frac{1}{\left( \frac{214}{271}\right) }=6\frac{%
-271}{214}=\frac{3\ast 271}{107}=\frac{813}{107}=7.598
+k_{ss} &=&1.1909 \\
+c_{ss} &=&0.4024 \\
+y_{ss} &=&0.5096.
 \end{eqnarray*}
 
 \end{document}
