@@ -14,14 +14,14 @@ program RBC_F90
 
 implicit none
 
-integer, parameter :: nGridCapital = 100
-integer, parameter :: nGridLabour =75
+integer, parameter :: nGridCapital = 500
+integer, parameter :: nGridLabour =500
 integer, parameter :: nGridProductivity = 5
 real (8), parameter :: curv=1.0
 real (8), parameter :: tolerance = 0.000001
   
 integer :: nCapital, nLabour, nCapitalNextPeriod, gridCapitalNextPeriod, nProductivity, nProductivityNextPeriod
-integer :: iteration
+integer :: iteration, ss
         
 !real :: elapsed(2), total
 
@@ -111,16 +111,29 @@ do while (maxDifference>tolerance)
                 
         do nCapital = 1,nGridCapital
 
-            xxx=0.0
+            xxx=-1000000.0
             do nCapitalNextPeriod =1,nGridCapital
                 do nLabour = 1,nGridLabour                   
                     
                     consumption = (1-ddelta)*vGridCapital(nCapital)+mOutput(nCapital,nLabour,nProductivity)-vGridCapital(nCapitalNextPeriod)                                     
                     
+                    if (valueProvisional>valueHighSoFar) then ! we break when we have achieved the max
+                            valueHighSoFar = valueProvisional
+                            capitalChoice = vGridCapital(nCapitalNextPeriod)
+                            gridCapitalNextPeriod = nCapitalNextPeriod
+                    else
+                           exit
+                    end if
+                    
                     if (consumption .lt. 0.0) then
                         xxx(nLabour,nCapitalNextPeriod) = -100000.0
                     else
-xxx(nLabour,nCapitalNextperiod) = log(consumption)-pphi*0.50*vGridLabour(nLabour)**2.0+bbeta*expectedValueFunction(nCapitalNextPeriod,nProductivity)
+                        xxx(nLabour,nCapitalNextperiod) = log(consumption)-pphi*0.50*vGridLabour(nLabour)**2.0+bbeta*expectedValueFunction(nCapitalNextPeriod,nProductivity)
+                    end if
+                    if (nlabour.gt.1) then
+                        if (xxx(nLabour,nCapitalNextperiod) .lt. xxx(nLabour-1,nCapitalNextperiod)) then
+                           exit
+                        end if   
                     end if
                 end do
             end do    
@@ -137,9 +150,9 @@ xxx(nLabour,nCapitalNextperiod) = log(consumption)-pphi*0.50*vGridLabour(nLabour
     mValueFunction = mValueFunctionNew
            
     iteration = iteration+1
-    if (mod(iteration,10)==0 .OR. iteration==1) then
+!    if (mod(iteration,10)==0 .OR. iteration==1) then
         print *, 'Iteration:', iteration, 'Sup Diff:', MaxDifference
-    end if
+!    end if
 end do
   
 !----------------------------------------------------------------
@@ -148,9 +161,10 @@ end do
   
 print *, 'Iteration:', iteration, 'Sup Diff:', MaxDifference
 print *, ' '
-print *, 'My check:', mPolicyFunctionCapital(50,3)
+ss=nGridCapital/2
+print *, 'My check:', mPolicyFunctionCapital(ss,3)
 print *, ' '
-print *, 'My check:', mPolicyFunctionLabour(50,3)
+print *, 'My check:', mPolicyFunctionLabour(ss,3)
 print *, ' '
 
 pause
