@@ -18,11 +18,12 @@ real(8), dimension(nGridProductivity) :: vProductivity
 real(8), dimension(nGridProductivity,nGridProductivity) :: mTransition
 real(8), dimension(nGridCapital) :: vGridCapital
 
-real(8), dimension(nGridLabour) :: vGridLabour
-real(8), dimension(nGridCapital,nGridProductivity) :: mValueFunction, mValueFunctionNew, mPolicyCapital, mPolicyLabour
-real(8), dimension(nGridCapital,nGridLabour,nGridProductivity) :: mOutput
-real(8), dimension(nGridCapital,nGridProductivity) :: expectedValueFunction
-real(8), dimension(nGridLabour,nGridcapital) :: xxx
+
+!real(8), dimension(nGridLabour) :: vGridLabour
+!real(8), dimension(nGridCapital,nGridProductivity) :: mValueFunction, mValueFunctionNew, mPolicyCapital, mPolicyLabour
+!real(8), dimension(nGridCapital,nGridLabour,nGridProductivity) :: mOutput
+!real(8), dimension(nGridCapital,nGridProductivity) :: expectedValueFunction
+!real(8), dimension(nGridLabour,nGridcapital) :: xxx
 integer,dimension(2)::resi
 
 integer initial_guess
@@ -32,8 +33,10 @@ real(8), dimension(4):: times
 real(8)::timeInSeconds
 
 integer::nGridCapital
-REAL, DIMENSION(:), ALLOCATABLE :: A
-
-
+integer, DIMENSION(:), ALLOCATABLE :: vGridCapital
+real(8), dimension(:,:), allocatable :: mValueFunction, mValueFunctionNew, mPolicyCapital, mPolicyLabour
+real(8), dimension(:,:,:), allocatable :: mOutput
+real(8), dimension(:,:), allocatable :: expectedValueFunction
+real(8), dimension(:,:), allocatable :: xxx
 
 end module RBC_var

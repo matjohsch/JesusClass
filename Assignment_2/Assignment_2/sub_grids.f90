@@ -6,6 +6,16 @@ use RBC_functions
 
 implicit none
 
+nGridCapital=178
+allocate (vGridCapital(nGridCapital))
+allocate (mValueFunction(nGridCapital,nGridProductivity))
+allocate (mValueFunctionNew(nGridCapital,nGridProductivity))
+allocate (mPolicyCapital(nGridCapital,nGridProductivity))
+allocate (mPolicyLabour(nGridCapital,nGridProductivity))
+allocate (mOutput(nGridCapital,nGridLabour,nGridProductivity))
+allocate (expectedValueFunction(nGridCapital,nGridProductivity))
+allocate (xxx(nGridLabour,nGridCapital))
+
  !Transition matrix
 mTransition = reshape( (/0.9727, 0.0273, 0.0, 0.0, 0.0, &
 0.0041, 0.9806, 0.0153, 0.0, 0.0, &

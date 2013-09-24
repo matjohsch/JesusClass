@@ -41,6 +41,18 @@ call sub_steady_state
 !----------------------------------------------------------------
 ! 2. Initial Guess and Grids 
 !----------------------------------------------------------------
+
+nGridCapital=178
+allocate (vGridCapital(nGridCapital))
+allocate (mValueFunction(nGridCapital,nGridProductivity))
+allocate (mValueFunctionNew(nGridCapital,nGridProductivity))
+allocate (mPolicyCapital(nGridCapital,nGridProductivity))
+allocate (mPolicyLabour(nGridCapital,nGridProductivity))
+allocate (mOutput(nGridCapital,nGridLabour,nGridProductivity))
+allocate (expectedValueFunction(nGridCapital,nGridProductivity))
+allocate (xxx(nGridLabour,nGridCapital))
+
+
 ! Productivity value
 vProductivity = (/0.9792, 0.9896, 1.0000, 1.0106, 1.0212/)
 call sub_grids
@@ -66,7 +78,7 @@ end if
 !----------------------------------------------------------------
 
 ! solve RBC either with brute force or with a numerical solver for the labour supply given capital choice
-!call sub_RBC_labour ! Bruce force - second grid for labour 
+! call sub_RBC_labour ! Bruce force - second grid for labour 
 
 call sub_RBC_labour_Solver ! using zbrent from numerical recipes
   
