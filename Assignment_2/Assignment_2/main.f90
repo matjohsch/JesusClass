@@ -17,7 +17,7 @@ implicit none
 !----------------------------------------------------------------
 
 ! Steady state Labour Supply (Calibration Target)
-! Either choose utility parameter psi or steady state labour supply
+! Either choose utility parameter phi or steady state labour supply
 labourSteadyState=0.3333333333      
 x=(aalpha*bbeta)/(1.0-bbeta+bbeta*ddelta)
 pphi = ((1.0-aalpha)/(labourSteadyState**2.0))/(1.0-ddelta*x)
@@ -27,18 +27,19 @@ pphi = ((1.0-aalpha)/(labourSteadyState**2.0))/(1.0-ddelta*x)
 ! Define the initial guess for the Value function
 ! 1:= constant function equal zeros; 2:=constant function equal to Steady State Value;
 ! 3:= value function obtained from the deterministic version of the problem
-initial_guess=1
+initial_guess = 1
 
-
+! Accelarator
+! To use the accelarator Howard:=true
+howard = 1
 
 !----------------------------------------------------------------
-! 0. PreSettings
+! 1. Steady State
 !----------------------------------------------------------------
 call sub_steady_state
 
-
 !----------------------------------------------------------------
-! 0. PreSettings
+! 2. Initial Guess and Grids 
 !----------------------------------------------------------------
 ! Productivity value
 vProductivity = (/0.9792, 0.9896, 1.0000, 1.0106, 1.0212/)
@@ -51,7 +52,7 @@ else if (initial_guess .eq. 2) then
     mValueFunction = consumptionSteadyState/(1.0-bbeta)
 else 
     mValueFunction = 0.0
-    ! deterministic version
+    ! Deterministic version
     vProductivity = (/1.0000, 1.0000, 1.0000, 1.0000, 1.0000/)     
     call sub_grids
     call sub_RBC_labour
@@ -61,7 +62,7 @@ else
 end if    
 
 !----------------------------------------------------------------
-! 0. PreSettings
+! Main Iteration - RBC
 !----------------------------------------------------------------
 
 ! solve RBC either with brute force or with a numerical solver for the labour supply given capital choice
@@ -69,16 +70,14 @@ end if
 
 call sub_RBC_labour_Solver ! using zbrent from numerical recipes
   
-
 !----------------------------------------------------------------
-! 5. PRINT RESULTS
+! 5. PRODUCE OUTPUT FILE
 !----------------------------------------------------------------
 
 call sub_out
 
-
 !----------------------------------------------------------------
-! 5. PRINT RESULTS
+! 5. PRINT MAIN RESULTS
 !----------------------------------------------------------------
   
 print *, 'Final Iteration:', iteration, 'Sup Diff:', MaxDifference
@@ -95,6 +94,5 @@ print *, ' '
 
 print *, 'Press enter to continue'
 pause
-
     
 end program main_RBC_Labour

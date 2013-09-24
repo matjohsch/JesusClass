@@ -8,8 +8,9 @@ use clock
 
 implicit none
 
-real(8), dimension(nGridCapital,nGridProductivity)::mCapitalProd
-real(8) :: valueHighSoFar, valueProvisional, capitalChoice, labourChoice
+real(8), dimension(nGridCapital,nGridProductivity)::mCapitalProd, mexpectedValueFunction
+real(8) :: valueHighSoFar, valueProvisional,  labourChoice,maxDifferenceold
+integer:: capitalChoice,it
 
 ! Numerical Solver
 ! Zbrent/brac
@@ -42,7 +43,8 @@ do while (maxDifference>tolerance)
             
             valueHighSoFar = -100000.0
             
-            if (mod(iteration,10)==0 .OR. iteration==1) then 
+            if (howard==0 .OR. mod(iteration,10)==0 .OR. iteration==1 .or. iteration .gt.2000 ) then 
+                maxDifferenceold=maxDifference
                 do nCapitalNextPeriod = gridCapitalNextPeriod , nGridCapital
                 
                     xa = log(epsi)
@@ -67,34 +69,36 @@ do while (maxDifference>tolerance)
                     end if
                     if (valueProvisional>valueHighSoFar) then ! we break when we have achieved the max
                         valueHighSoFar = valueProvisional
-                        !wer=nCapitalNextPeriod
-                        !capitalChoice = vGridCapital(nCapitalNextPeriod)
+                        capitalChoice = nCapitalNextPeriod
                         gridCapitalNextPeriod = nCapitalNextPeriod
                     else
                         exit
                     end if
                 end do    
                 
-                mValueFunctionNew(nCapital,nProductivity) = valueHighSoFar
-                
-                mPolicyCapital(nCapital,nProductivity) = vGridCapital(wer)
+                mValueFunctionNew(nCapital,nProductivity) = valueHighSoFar  
+                mexpectedValueFunction(nCapital,nProductivity) = expectedValueFunction(capitalchoice,nProductivity)
+                mPolicyCapital(nCapital,nProductivity) = vGridCapital(capitalchoice)
                 mPolicyLabour(nCapital,nProductivity) = labourChoice                 
             else 
                 consumption = (1-ddelta)*vGridCapital(nCapital) + mCapitalProd(nCapital,nProductivity) *  mPolicyLabour(nCapital,nProductivity)**(1.0-aalpha) - mPolicyCapital(nCapital,nProductivity)                                     
                     
-                mValueFunctionNew(nCapital,nProductivity) = log(consumption)-pphi*0.50* mPolicyLabour(nCapital,nProductivity)**2.0+bbeta*expectedValueFunction(mPolicyCapital(nCapital,nProductivity),nProductivity) 
+                mValueFunctionNew(nCapital,nProductivity) = log(consumption)-pphi*0.50* mPolicyLabour(nCapital,nProductivity)**2.0+bbeta*mexpectedValueFunction(nCapital,nProductivity) 
             end if
      
         end do
     end do
-
-    maxDifference = maxval((abs(mValueFunctionNew-mValueFunction)))
-    mValueFunction = mValueFunctionNew
            
-    iteration = iteration+1
-    if (mod(iteration,10)==0 .OR. iteration==1) then
-        print *, 'Iteration:', iteration, 'Sup Diff:', MaxDifference
+   
+    if (howard==0 .OR. mod(iteration,10)==0 .OR. iteration==1) then
+        maxDifference = maxval((abs(mValueFunctionNew-mValueFunction)))
+        if (mod(iteration,10)==0 .OR. iteration==1) then
+            print *, 'Iteration:', iteration, 'Sup Diff:', MaxDifference
+        end if
     end if
+    iteration = iteration+1
+    mValueFunction = mValueFunctionNew
+
 end do
 call toc
 

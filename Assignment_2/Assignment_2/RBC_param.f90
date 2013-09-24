@@ -1,7 +1,7 @@
 module RBC_param
     
 ! Define how many gridpoints the capital grid should have
-integer, parameter:: nGridCapital = 1780       ! number of grid points in capital grid
+!integer, parameter:: nGridCapital = 178       ! number of grid points in capital grid
 integer, parameter  :: nGridLabour  = 100         ! number of grid points in Labour grid
 integer, parameter  :: nGridProductivity = 5    ! number of technology states
 real (8), parameter :: curv = 1.0                 ! curvature of grids
