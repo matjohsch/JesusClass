@@ -1,4 +1,4 @@
-subroutine sub_RBC_labour_solver
+subroutine sub_RBC_labour_solver(nold,nnew,gridold,valueold,vGridCapital,mValueFunction,mPolicyCapital,mPolicyLabour)
     
 use RBC_var
 use RBC_param
@@ -8,9 +8,18 @@ use clock
 
 implicit none
 
-real(8), dimension(nGridCapital,nGridProductivity)::mCapitalProd, mexpectedValueFunction
-real(8) :: valueHighSoFar, valueProvisional,  labourChoice,maxDifferenceold
-integer:: capitalChoice,it
+integer,intent(in)::nnew,nold
+real(8), dimension(nold),intent(in)::gridold
+real(8),dimension(nold,nGridProductivity),intent(in)::valueold
+
+real(8), dimension(nnew),intent(out)::vGridCapital
+real(8),dimension(nnew,nGridProductivity),intent(out)::mValueFunction
+
+real(8), dimension(nnew,nGridProductivity) :: mCapitalProd, mexpectedValueFunction
+real(8), dimension(nnew,nGridProductivity) :: mValueFunctionNew, mPolicyCapital, mPolicyLabour,expectedValueFunction
+
+real(8) :: value, valueHighSoFar, valueProvisional, labourChoice
+integer:: capitalChoice, counterProd, counterCap
 
 ! Numerical Solver
 ! Zbrent/brac
@@ -22,9 +31,19 @@ real(8),parameter::epsi = 1.0e-10         ! absolute error level
 real(8):: fsige,xa,xb
 logical:: succes
 
+call sub_makegrid(lowcapital,highcapital,nnew,curv,vGridCapital)
+
+! interpolation
+do counterProd=1,nGridProductivity 
+    do counterCap=1,nnew
+        call sub_interpolation(gridold,valueold(:,counterProd),nold,vGridCapital(counterCap),value)
+        mValueFunction(counterCap,counterProd)=value
+    end do
+end do
+
 do nProductivity = 1, nGridProductivity
-    do nCapital = 1, nGridCapital
-            mCapitalProd(nCapital, nProductivity) = vProductivity(nProductivity)*vGridCapital(nCapital)**aalpha
+    do nCapital = 1, nnew
+        mCapitalProd(nCapital, nProductivity) = vProductivity(nProductivity)*vGridCapital(nCapital)**aalpha
     end do
 end do
 
@@ -33,19 +52,18 @@ iteration = 0
 
 call tic
 do while (maxDifference>tolerance)
-     
+    
     expectedValueFunction = matmul(mValueFunction,transpose(mTransition));
-   
+
     do nProductivity = 1,nGridProductivity               
          
         gridCapitalNextPeriod = 1
-        do nCapital = 1,nGridCapital
+        do nCapital = 1,nnew
             
             valueHighSoFar = -100000.0
             
-            if (howard==0 .OR. mod(iteration,10)==0 .OR. iteration==1 .or. iteration .gt.2000 ) then 
-                maxDifferenceold=maxDifference
-                do nCapitalNextPeriod = gridCapitalNextPeriod , nGridCapital
+            if (howard==0 .OR. mod(iteration,10)==0 .OR. iteration==1 .or. iteration .gt.500 ) then 
+                do nCapitalNextPeriod = gridCapitalNextPeriod , nnew
                 
                     xa = log(epsi)
                     xb = xa+log(ddx)

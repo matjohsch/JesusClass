@@ -12,6 +12,14 @@ use RBC_functions
 
 implicit none
 
+integer i,nold,nnew
+real(8), dimension(:),allocatable :: aaa,vGridCapital
+real(8), dimension(:,:),allocatable :: bbb, mValueFunction, mPolicyCapital, mPolicyLabour!,expectedValueFunction
+integer,dimension(3)::scheme
+scheme(1)=100
+scheme(2)=1000
+scheme(3)=25000
+
 !----------------------------------------------------------------
 ! 0. PreSettings
 !----------------------------------------------------------------
@@ -27,7 +35,7 @@ pphi = ((1.0-aalpha)/(labourSteadyState**2.0))/(1.0-ddelta*x)
 ! Define the initial guess for the Value function
 ! 1:= constant function equal zeros; 2:=constant function equal to Steady State Value;
 ! 3:= value function obtained from the deterministic version of the problem
-initial_guess = 1
+initial_guess = 2
 
 ! Accelarator
 ! To use the accelarator Howard:=true
@@ -39,38 +47,44 @@ howard = 1
 call sub_steady_state
 
 !----------------------------------------------------------------
-! 2. Initial Guess and Grids 
+! 2. Technology Morkov Chain and Initial Guess 
 !----------------------------------------------------------------
-
-nGridCapital=178
-allocate (vGridCapital(nGridCapital))
-allocate (mValueFunction(nGridCapital,nGridProductivity))
-allocate (mValueFunctionNew(nGridCapital,nGridProductivity))
-allocate (mPolicyCapital(nGridCapital,nGridProductivity))
-allocate (mPolicyLabour(nGridCapital,nGridProductivity))
-allocate (mOutput(nGridCapital,nGridLabour,nGridProductivity))
-allocate (expectedValueFunction(nGridCapital,nGridProductivity))
-allocate (xxx(nGridLabour,nGridCapital))
-
 
 ! Productivity value
 vProductivity = (/0.9792, 0.9896, 1.0000, 1.0106, 1.0212/)
-call sub_grids
+! Transition matrix
+mTransition = reshape( (/0.9727, 0.0273, 0.0, 0.0, 0.0, &
+0.0041, 0.9806, 0.0153, 0.0, 0.0, &
+0.0, 0.0082, 0.9837, 0.0082, 0.0, &
+0.0, 0.0, 0.0153, 0.9806, 0.0041, &
+0.0, 0.0, 0.0, 0.0273, 0.9727 /), (/5,5/))
 
+mTransition = transpose(mTransition)
+
+nold=scheme(1)
+allocate (vGridCapital(nold))
+call sub_makegrid(lowcapital,highcapital,nold,curv,vGridCapital)
+allocate (mValueFunction(nold,nGridProductivity))
+allocate (mPolicyCapital(nold,nGridProductivity))
+allocate (mPolicyLabour(nold,nGridProductivity))
 ! Initial guess for value function
 if (initial_guess .eq. 1) then
-     mValueFunction = 0.0
+
+    mValueFunction = 0.0
 else if (initial_guess .eq. 2) then    
     mValueFunction = consumptionSteadyState/(1.0-bbeta)
 else 
     mValueFunction = 0.0
     ! Deterministic version
     vProductivity = (/1.0000, 1.0000, 1.0000, 1.0000, 1.0000/)     
-    call sub_grids
-    call sub_RBC_labour
+    
+    nnew=scheme(1)
+    nold=nnew
+    call sub_makegrid(lowcapital,highcapital,nnew,curv,vGridCapital)
+    call sub_RBC_labour_solver(nold,nnew,vGridCapital,mValueFunction,vGridCapital,mValueFunction,mPolicyCapital,mPolicyLabour)
 
     vProductivity = (/0.9792, 0.9896, 1.0000, 1.0106, 1.0212/)
-    call sub_grids
+    call sub_makegrid(lowcapital,highcapital,nnew,curv,vGridCapital)
 end if    
 
 !----------------------------------------------------------------
@@ -79,14 +93,35 @@ end if
 
 ! solve RBC either with brute force or with a numerical solver for the labour supply given capital choice
 ! call sub_RBC_labour ! Bruce force - second grid for labour 
+! using zbrent from numerical recipes
 
-call sub_RBC_labour_Solver ! using zbrent from numerical recipes
-  
+do i=1,3
+    nnew=scheme(i)
+       
+    allocate (aaa(nnew))
+    allocate (bbb(nnew,nGridProductivity))
+    deallocate (mPolicyCapital)
+    deallocate (mPolicyLabour)
+    allocate (mPolicyCapital(nnew,nGridProductivity))
+    allocate (mPolicyLabour(nnew,nGridProductivity))
+    
+    call sub_RBC_labour_Solver(nold,nnew,vGridCapital,mValueFunction,aaa,bbb,mPolicyCapital,mPolicyLabour) 
+    
+    deallocate(vGridCapital)
+    allocate (vGridCapital(nnew))
+    vGridCapital=aaa
+    deallocate(mValueFunction)
+    allocate (mValueFunction(nnew,nGridProductivity))
+    mValueFunction=bbb
+    deallocate (aaa)
+    deallocate (bbb)
+end do
+
 !----------------------------------------------------------------
 ! 5. PRODUCE OUTPUT FILE
 !----------------------------------------------------------------
 
-call sub_out
+!call sub_out
 
 !----------------------------------------------------------------
 ! 5. PRINT MAIN RESULTS
@@ -97,8 +132,8 @@ print *, ' '
 timeInSeconds=times(3)*60.0+times(4)
 print *, 'Computing Time', timeInSeconds
 print *, ' '
-
-ss=nGridCapital/2
+!
+ss=nnew/2
 print *, 'My check Capital:', mPolicyCapital(ss,3)
 print *, ' '
 print *, 'My check Labour:', mPolicyLabour(ss,3)

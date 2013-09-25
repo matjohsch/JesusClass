@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<VisualStudioProject ProjectCreator="Intel Fortran" Keyword="Console Application" Version="11.0" ProjectIdGuid="{ABCD6F21-9BBF-4E09-9763-28E942F4AD8A}">
+<VisualStudioProject ProjectCreator="Intel Fortran" Keyword="Console Application" Version="11.0" ProjectIdGuid="{67DB6E4C-B23C-493A-9D52-2E1501AC4593}">
 	<Platforms>
 		<Platform Name="Win32"/></Platforms>
 	<Configurations>
@@ -14,8 +14,8 @@
 				<Tool Name="VFPostBuildEventTool"/>
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
 		<Configuration Name="Release|Win32">
-				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" Optimization="optimizeFull"/>
-				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" SubSystem="subSystemConsole" StackReserveSize="99999999"/>
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true"/>
+				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" SubSystem="subSystemConsole"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
 				<Tool Name="VFCustomBuildTool"/>
@@ -24,18 +24,7 @@
 				<Tool Name="VFPostBuildEventTool"/>
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration></Configurations>
 	<Files>
-		<Filter Name="Header Files" Filter="fi;fd">
-		<File RelativePath=".\RBC_param.f90"/>
-		<File RelativePath=".\RBC_var.f90"/></Filter>
-		<Filter Name="Resource Files" Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe">
-		<File RelativePath=".\RBC_functions.f90"/>
-		<File RelativePath=".\sing_dim.f90"/></Filter>
-		<Filter Name="Source Files" Filter="f90;for;f;fpp;ftn;def;odl;idl">
-		<File RelativePath=".\clock.f90"/>
-		<File RelativePath=".\main.f90"/>
-		<File RelativePath=".\sub_grids.f90"/>
-		<File RelativePath=".\sub_out.f90"/>
-		<File RelativePath=".\sub_RBC_Labour.f90"/>
-		<File RelativePath=".\sub_RBC_Labour_Solver.f90"/>
-		<File RelativePath=".\sub_steady_state.f90"/></Filter></Files>
+		<Filter Name="Header Files" Filter="fi;fd"/>
+		<Filter Name="Resource Files" Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"/>
+		<Filter Name="Source Files" Filter="f90;for;f;fpp;ftn;def;odl;idl"/></Files>
 	<Globals/></VisualStudioProject>
