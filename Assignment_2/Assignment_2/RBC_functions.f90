@@ -1,6 +1,7 @@
-module RBC_functions
+module RBC_Functions
     
 contains 
+    
 subroutine sub_makegrid(x1,x2,n,c,grid)
 
 ! builds grids, linear if scaling factor c=1, triple exponential for c=3
@@ -8,7 +9,7 @@ subroutine sub_makegrid(x1,x2,n,c,grid)
 implicit none
 real(8),intent(in)::x1,x2,c
 integer,intent(in)::n
-real(8),dimension(n)::grid!,intent(out)
+real(8),dimension(n)::grid
 integer::i
 real(8)::scale
 
@@ -21,26 +22,49 @@ end do
 
 end subroutine sub_makegrid
 
+subroutine sub_makerandomgrid(x1,x2,n,grid)
+
+implicit none
+real(8),intent(in)::x1,x2
+integer,intent(in)::n
+real(8),dimension(n)::grid
+integer::i
+real(8)::scale, num
+
+call RANDOM_SEED
+
+scale = x2-x1
+grid(1) = x1
+grid(n) = x2
+do i = 2,n-1
+    call RANDOM_NUMBER(num)
+	grid(i) = x1+scale*num
+end do
+
+call sub_Bubble_Sort(grid)
+
+end subroutine sub_makerandomgrid
 
 !---------------------------------------------------------------------------------------
-subroutine sub_interpolation(gridold,valuegrid,np,point,value)
+subroutine sub_interpolation(GridOld,valuegrid,np,point,value)
 
-! Interpolation for EXGM
+! Interpolation
 
 implicit none
 integer::np
-real(8),dimension(np),intent(in)::gridold,valuegrid
+real(8),dimension(np),intent(in)::GridOld,valuegrid
 real(8),intent(in)::point
 real(8),intent(out)::value
 real(8)::vals(2)
 integer inds(2)
 
-call sub_basefun(gridold,np,point,vals,inds)
+call sub_basefun(GridOld,np,point,vals,inds)
 
 value = vals(1)*valuegrid(inds(1))+vals(2)*valuegrid(inds(2))
 
 end subroutine sub_interpolation
- ! --------------------------------------------------------------------------------------
+
+! --------------------------------------------------------------------------------------
 subroutine sub_basefun (grid,np,point,vals,inds) 
 
 ! interpolation: basis functions 
@@ -93,5 +117,27 @@ end do
 i = jl+1
 
 end subroutine sub_lookup
+
 ! --------------------------------------------------------------------------------------
-end module RBC_functions
+
+SUBROUTINE sub_Bubble_Sort(a)
+  REAL(8), INTENT(in out), DIMENSION(:) :: a
+  REAL(8) :: temp
+  INTEGER :: i, j
+  LOGICAL :: swapped = .TRUE.
+ 
+  DO j = SIZE(a)-1, 1, -1
+    swapped = .FALSE.
+    DO i = 1, j
+      IF (a(i) > a(i+1)) THEN
+        temp = a(i)
+        a(i) = a(i+1)
+        a(i+1) = temp
+        swapped = .TRUE.
+      END IF
+    END DO
+    IF (.NOT. swapped) EXIT
+  END DO
+END SUBROUTINE sub_Bubble_Sort
+
+end module RBC_Functions

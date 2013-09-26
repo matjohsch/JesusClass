@@ -57,7 +57,7 @@ end subroutine tic
 !##############################################################################
 subroutine toc(file)
 
-    use RBC_var
+    use RBC_Variable
 
     !##### INPUT/OUTPUT VARIABLES #############################################
     
