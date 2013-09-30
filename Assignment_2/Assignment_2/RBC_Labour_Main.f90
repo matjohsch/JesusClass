@@ -13,7 +13,7 @@ use RBC_Functions
 implicit none
 
 integer,dimension(:), allocatable:: nMultiGrid
-integer:: nGridOld, nGridNew, nMultigridcounter, nGrids
+integer:: nGridOld, nGridNew, cMultigrid, nGrids
 
 real(8)::capital, labour, timeInSeconds
 real(8), dimension(:), allocatable   :: vGridCapitalSave, vGridCapital
@@ -29,7 +29,7 @@ integer:: SteadyState
 ! nGrids:= How many grids implemented; nMultiGrid:= Define grid size in each step
 nGrids = 3
 allocate (nMultiGrid(nGrids))
-nMultiGrid = (/ 100, 1000, 17800 /)
+nMultiGrid = (/ 178, 178, 178 /)
 
 ! INITIAL GUESS for Value function
 ! 1:= constant function equal zeros
@@ -132,8 +132,10 @@ end if
 ! solve RBC with a numerical solver for the labour supply given capital choice
 ! using zbrent from numerical recipes
 
-do nMultiGridcounter=1,size(nMultiGrid)
-    nGridNew=nMultiGrid(nMultiGridcounter)
+
+
+do cMultigrid=1,size(nMultiGrid)
+    nGridNew=nMultiGrid(cMultigrid)
        
     allocate (vGridCapitalSave(nGridNew))
     allocate (mValueFuctionSave(nGridNew,nGridProductivity))
@@ -157,6 +159,10 @@ do nMultiGridcounter=1,size(nMultiGrid)
     deallocate (mValueFuctionSave)
     nGridOld=nGridNew
 end do
+
+call sub_RBC_VFI(mValueFunction)
+
+call sub_RBC_EGM(nMultigrid(1),mValueFunction,mPolicyCapital,mPolicyLabour)
 
 !----------------------------------------------------------------
 ! 5. PRODUCE OUTPUT FILE

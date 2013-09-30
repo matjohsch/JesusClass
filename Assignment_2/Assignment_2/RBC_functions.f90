@@ -62,9 +62,95 @@ call sub_basefun(GridOld,np,point,vals,inds)
 
 value = vals(1)*valuegrid(inds(1))+vals(2)*valuegrid(inds(2))
 
+if (maxval(abs(vals(:)))>1.0) then
+    print* ,'extrapolation'
+end if
+
+
 end subroutine sub_interpolation
 
 ! --------------------------------------------------------------------------------------
+
+!---------------------------------------------------------------------------------------
+subroutine sub_derivative(GridOld,valuegrid,np,point,derivative)
+
+! Interpolation
+
+implicit none
+integer::np
+real(8),dimension(np),intent(in)::GridOld,valuegrid
+real(8),intent(in)::point
+real(8),intent(out)::derivative
+real(8)::vals(2)
+real(8)::x,y
+
+integer inds(2)
+
+call sub_basefun(GridOld,np,point,vals,inds)
+
+x=gridold(inds(2))-gridold(inds(1))
+y=valuegrid(inds(2))-valuegrid(inds(1))
+
+derivative=y/x
+
+if (maxval(abs(vals(:)))>1.0) then
+    print* ,'extrapolation'
+end if
+
+
+end subroutine sub_derivative
+
+! --------------------------------------------------------------------------------------
+
+
+!---------------------------------------------------------------------------------------
+subroutine sub_derivative2(GridOld,valuegrid,np,point,derivative)
+
+! Interpolation
+
+implicit none
+integer::np
+real(8),dimension(np),intent(in)::GridOld,valuegrid
+integer,intent(in)::point
+real(8),intent(out)::derivative
+real(8)::vals(2)
+real(8)::x,y,derivative1,derivative2
+
+integer inds(2)
+
+if (point==1) then
+    x=gridold(2)-gridold(1)
+    y=valuegrid(2)-valuegrid(1)
+
+    derivative=y/x
+else if (point==np) then
+    x=gridold(np)-gridold(np-1)
+    y=valuegrid(np)-valuegrid(np-1)
+
+    derivative=y/x
+else
+    x=gridold(point)-gridold(point-1)
+    y=valuegrid(point)-valuegrid(point-1)
+    
+    derivative1=y/x
+    
+    x=gridold(point+1)-gridold(point)
+    y=valuegrid(point+1)-valuegrid(point)
+    derivative2=y/x
+    
+    derivative=(derivative1+derivative2)/2.0
+end if
+
+
+if (maxval(abs(vals(:)))>1.0) then
+    print* ,'extrapolation'
+end if
+
+
+end subroutine sub_derivative2
+
+! --------------------------------------------------------------------------------------
+
 subroutine sub_basefun (grid,np,point,vals,inds) 
 
 ! interpolation: basis functions 

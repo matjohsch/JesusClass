@@ -4,7 +4,7 @@
 ! Date : July 31, 2013
 !============================================================================
 
-program RBC_F90
+subroutine sub_RBC_VFI(mValueFunction)
   
   !----------------------------------------------------------------
   ! 0. variables definition
@@ -12,7 +12,7 @@ program RBC_F90
   
   implicit none
 
-integer, parameter :: nGridCapital = 17820
+  integer, parameter :: nGridCapital = 178
   integer, parameter :: nGridProductivity = 5
   real(8), parameter :: tolerance = 0.0000001
   
@@ -28,9 +28,9 @@ integer, parameter :: nGridCapital = 17820
   real(8), dimension(nGridProductivity) :: vProductivity
   real(8), dimension(nGridProductivity,nGridProductivity) :: mTransition
   real(8), dimension(nGridCapital) :: vGridCapital
-  real(8), dimension(nGridCapital,nGridProductivity) :: mOutput, mValueFunction, mValueFunctionNew, mPolicyFunction
+  real(8), dimension(nGridCapital,nGridProductivity) :: mOutput,  mValueFunctionNew, mPolicyFunction
   real(8), dimension(nGridCapital,nGridProductivity) :: expectedValueFunction
-  
+    real(8), dimension(nGridCapital,nGridProductivity), intent(out) ::mValueFunction
   !----------------------------------------------------------------
   ! 1. Calibration
   !----------------------------------------------------------------
@@ -63,7 +63,7 @@ integer, parameter :: nGridCapital = 17820
       
   ! Grid for capital
   do nCapital = 1, nGridCapital
-     vGridCapital(nCapital) = 0.5*capitalSteadyState+0.00001*(nCapital-1)
+     vGridCapital(nCapital) = 0.5*capitalSteadyState+0.01*(nCapital-1)
   end do
 
   !----------------------------------------------------------------
@@ -133,10 +133,10 @@ end do
   
   print *, 'Iteration:', iteration, 'Sup Diff:', MaxDifference
   print *, ' '
-  print *, 'My check:', mPolicyFunction(1000,3)
+  !print *, 'My check:', mPolicyFunction(1000,3)
   print *, ' '
 
 
   print *, 'Elapsed time is ', elapsed(1)
 
-end program RBC_F90
+end subroutine sub_RBC_VFI

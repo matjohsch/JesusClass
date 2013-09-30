@@ -1,25 +1,31 @@
-subroutine sub_RBC_labour_solver(nold,nnew,gridold,valueold,vGridCapital,mValueFunction,mPolicyCapital,mPolicyLabour)
-    
-use RBC_var
-use RBC_param
-use RBC_functions
-use sing_dim
+subroutine sub_RBC_Labour_Solver(nGridOld,nGridNew,GridOld,ValueOld,vGridCapital,mValueFunction,mPolicyCapital,mPolicyLabour)
+
+use RBC_Parameter    
+use RBC_Variable
+use RBC_Functions
+use Solver
 use clock
 
 implicit none
 
-integer,intent(in)::nnew,nold
-real(8), dimension(nold),intent(in)::gridold
-real(8),dimension(nold,nGridProductivity),intent(in)::valueold
+integer, intent(in):: nGridNew, nGridOld
+real(8), dimension(nGridOld),intent(in) :: GridOld
+real(8), dimension(nGridOld,nGridProductivity), intent(in) :: ValueOld
 
-real(8), dimension(nnew),intent(out)::vGridCapital
-real(8),dimension(nnew,nGridProductivity),intent(out)::mValueFunction
+real(8), dimension(nGridNew) ,intent(out) :: vGridCapital
+real(8), dimension(nGridNew,nGridProductivity), intent(out) :: mValueFunction
 
-real(8), dimension(nnew,nGridProductivity) :: mCapitalProd, mexpectedValueFunction
-real(8), dimension(nnew,nGridProductivity) :: mValueFunctionNew, mPolicyCapital, mPolicyLabour,expectedValueFunction
+integer :: cCapital, cProductivity, cCapitalNextPeriod
+integer :: gridCapitalNextPeriod
 
-real(8) :: value, valueHighSoFar, valueProvisional, labourChoice
-integer:: capitalChoice, counterProd, counterCap
+real(8), dimension(nGridNew,nGridProductivity) :: mCapitalProd, mValueFunctionNew, expectedValueFunction
+real(8), dimension(nGridNew,nGridProductivity) :: mPolicyCapital, mPolicyCapitalIndex, mPolicyLabour, mPolicyConsumption
+
+real(8) :: valueHighSoFar, valueProvisional
+real(8) :: labour, cons, labourChoice
+integer :: capitalChoice
+
+real(8) :: maxDifference
 
 ! Numerical Solver
 ! Zbrent/brac
@@ -31,94 +37,112 @@ real(8),parameter::epsi = 1.0e-10         ! absolute error level
 real(8):: fsige,xa,xb
 logical:: succes
 
-call sub_makegrid(lowcapital,highcapital,nnew,curv,vGridCapital)
+! Generation of New Grid 
+if (STOCHASTIC == 1) then
+    call sub_makerandomgrid(lowcapital,highcapital,nGridNew,vGridCapital)
+else
+    call sub_makegrid(lowcapital,highcapital,nGridNew,curv,vGridCapital)
+end if
 
-! interpolation
-do counterProd=1,nGridProductivity 
-    do counterCap=1,nnew
-        call sub_interpolation(gridold,valueold(:,counterProd),nold,vGridCapital(counterCap),value)
-        mValueFunction(counterCap,counterProd)=value
+! Interpolation of new Gridpoints at old Grid
+do cProductivity = 1,nGridProductivity 
+    do cCapital = 1,nGridNew
+        call sub_interpolation(GridOld,ValueOld(:,cProductivity),nGridOld,vGridCapital(cCapital),mValueFunction(cCapital,cProductivity))
     end do
 end do
 
-do nProductivity = 1, nGridProductivity
-    do nCapital = 1, nnew
-        mCapitalProd(nCapital, nProductivity) = vProductivity(nProductivity)*vGridCapital(nCapital)**aalpha
+! Capital State times Productivity State
+do cProductivity = 1, nGridProductivity
+    do cCapital = 1, nGridNew
+        mCapitalProd(cCapital, cProductivity) = vProductivity(cProductivity)*vGridCapital(cCapital)**aalpha
     end do
 end do
 
 maxDifference = 10.0
 iteration = 0
 
+! Starting Value Function Iteration
 call tic
 do while (maxDifference>tolerance)
     
+    iteration = iteration+1
+    
     expectedValueFunction = matmul(mValueFunction,transpose(mTransition));
 
-    do nProductivity = 1,nGridProductivity               
+    do cProductivity = 1,nGridProductivity               
          
         gridCapitalNextPeriod = 1
-        do nCapital = 1,nnew
-            
-            valueHighSoFar = -100000.0
-            
-            if (howard==0 .OR. mod(iteration,10)==0 .OR. iteration==1 .or. iteration .gt.500 ) then 
-                do nCapitalNextPeriod = gridCapitalNextPeriod , nnew
+        do cCapital = 1,nGridNew
+                 
+            if (HOWARD == 0 .OR. mod(iteration,10) == 0 .OR. iteration <= 3) then 
                 
-                    xa = log(epsi)
+                valueHighSoFar = -100000.0
+               
+                do cCapitalNextPeriod = gridCapitalNextPeriod , nGridNew
+                
+                    xa = log(1.0)
                     xb = xa+log(ddx)
 
                     call  zbrac(f_labour,xa,xb,succes)
                     xb = zbrent(f_labour,xa,xb,tolbre)
 
                     fsige = f_labour(xb)
-                    if (abs(fsige) .gt. 0.0001) then
-                       print*, 'labour failed to compute supply'
+                    if (abs(fsige) .gt. 0.000001) then
+                       print*, 'failed to compute labour supply'
                        pause
                     end if
 
-                    labourChoice = exp(xb)
-                    consumption = (1-ddelta)*vGridCapital(nCapital) + mCapitalProd(nCapital,nProductivity) *  labourChoice**(1.0-aalpha) - vGridCapital(nCapitalNextPeriod)                                     
+                    labour = exp(xb)
+                    cons = (1-ddelta)*vGridCapital(cCapital) + mCapitalProd(cCapital,cProductivity) *  labour**(1.0-aalpha) - vGridCapital(cCapitalNextPeriod)                                     
                     
-                    if (consumption .lt. 0.0) then
+                    if (cons < 0.0) then
                         print*, 'negative consumption'
                     else
-                        valueProvisional = log(consumption)-pphi*0.50* labourChoice**2.0+bbeta*expectedValueFunction(nCapitalNextPeriod,nProductivity)
+                        valueProvisional = log(cons)-pphi*0.50* labour**2.0+bbeta*expectedValueFunction(cCapitalNextPeriod,cProductivity)
                     end if
-                    if (valueProvisional>valueHighSoFar) then ! we break when we have achieved the max
+                    if (valueProvisional > valueHighSoFar) then ! we break when we have achieved the max
                         valueHighSoFar = valueProvisional
-                        capitalChoice = nCapitalNextPeriod
-                        gridCapitalNextPeriod = nCapitalNextPeriod
+                        capitalChoice = cCapitalNextPeriod
+                        gridCapitalNextPeriod = cCapitalNextPeriod
+                        labourchoice = labour
                     else
                         exit
                     end if
                 end do    
                 
-                mValueFunctionNew(nCapital,nProductivity) = valueHighSoFar  
-                mexpectedValueFunction(nCapital,nProductivity) = expectedValueFunction(capitalchoice,nProductivity)
-                mPolicyCapital(nCapital,nProductivity) = vGridCapital(capitalchoice)
-                mPolicyLabour(nCapital,nProductivity) = labourChoice                 
+                mValueFunctionNew(cCapital,cProductivity) = valueHighSoFar  
+
+                mPolicyCapitalIndex(cCapital,cProductivity) = capitalChoice
+                mPolicyCapital(cCapital,cProductivity) = vGridCapital(capitalchoice)
+                
+                mPolicyLabour(cCapital,cProductivity) = labourchoice     
+                
+                mPolicyConsumption(cCapital,cProductivity) = (1-ddelta)*vGridCapital(cCapital) + mCapitalProd(cCapital,cProductivity) *  mPolicyLabour(cCapital,cProductivity)**(1.0-aalpha) - mPolicyCapital(cCapital,cProductivity)                                     
+
             else 
-                consumption = (1-ddelta)*vGridCapital(nCapital) + mCapitalProd(nCapital,nProductivity) *  mPolicyLabour(nCapital,nProductivity)**(1.0-aalpha) - mPolicyCapital(nCapital,nProductivity)                                     
-                    
-                mValueFunctionNew(nCapital,nProductivity) = log(consumption)-pphi*0.50* mPolicyLabour(nCapital,nProductivity)**2.0+bbeta*mexpectedValueFunction(nCapital,nProductivity) 
+                                    
+                mValueFunctionNew(cCapital,cProductivity) = log(mPolicyConsumption(cCapital,cProductivity)) -pphi*0.50* mPolicyLabour(cCapital,cProductivity)**2.0 + bbeta*expectedValueFunction(mPolicyCapitalIndex(cCapital,cProductivity),cProductivity)
+            
             end if
      
         end do
-    end do
-           
+    end do      
    
-    if (howard==0 .OR. mod(iteration,10)==0 .OR. iteration==1) then
+    if (HOWARD == 0 .OR. mod(iteration,10) == 0 .OR. iteration <= 3) then
         maxDifference = maxval((abs(mValueFunctionNew-mValueFunction)))
-        if (mod(iteration,10)==0 .OR. iteration==1) then
+        if (mod(iteration,10) == 0 .OR. iteration == 1) then
             print *, 'Iteration:', iteration, 'Sup Diff:', MaxDifference
         end if
     end if
-    iteration = iteration+1
-    mValueFunction = mValueFunctionNew
+    
+    mValueFunction = mValueFunctionNew 
 
 end do
+
 call toc
+
+print *, 'Final Iteration:', iteration, 'Sup Diff:', MaxDifference
+print *, ' '
 
 contains
 
@@ -131,9 +155,9 @@ real(8)::f_labour
 
 xtransformed = exp(x)
 
-f_labour = mCapitalProd(nCapital,nProductivity)*(xtransformed**(1.0-aalpha)-(1.0-aalpha)/pphi*xtransformed**(-aalpha-1.0))- vGridCapital(nCapitalNextPeriod) + (1.0-ddelta)*vgridCapital(nCapital)
+f_labour = mCapitalProd(cCapital,cProductivity) *(xtransformed**(1.0-aalpha)-(1.0-aalpha)/pphi*xtransformed**(-aalpha-1.0)) - vGridCapital(cCapitalNextPeriod) + (1.0-ddelta)*vgridCapital(cCapital)
 
 end function f_labour
 !---------------------------------------------------------------------------------------
     
-end subroutine sub_RBC_labour_solver
+end subroutine sub_RBC_Labour_Solver
