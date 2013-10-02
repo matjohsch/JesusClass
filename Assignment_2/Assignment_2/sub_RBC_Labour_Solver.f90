@@ -1,4 +1,4 @@
-subroutine sub_RBC_Labour_Solver(nGridOld,nGridNew,GridOld,ValueOld,vGridCapital,mValueFunction,mPolicyCapital,mPolicyLabour)
+subroutine sub_RBC_Labour_Solver(nGridOld,nGridNew,GridOld,ValueOld,vGridCapital,mValueFunction,mPolicyCapital,mPolicyLabour, mPolicyConsumption)
 
 use RBC_Parameter    
 use RBC_Variable
@@ -29,10 +29,10 @@ real(8) :: maxDifference
 
 ! Numerical Solver
 ! Zbrent/brac
-real(8),parameter::tolbre = 1.0e-12        ! tolerance level of zbrent
+real(8),parameter::tolbre = 1.0e-16        ! tolerance level of zbrent
 real(8),parameter::ddx    = 1.0e-4         ! range of first bracket in zbrac
 real(8),parameter::errabs = 1.0e-6         ! absolute error level 
-real(8),parameter::epsi = 1.0e-10         ! absolute error level 
+
 
 real(8):: fsige,xa,xb
 logical:: succes

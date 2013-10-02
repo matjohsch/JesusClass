@@ -17,7 +17,7 @@ integer:: nGridOld, nGridNew, cMultigrid, nGrids
 
 real(8)::capital, labour, timeInSeconds
 real(8), dimension(:), allocatable   :: vGridCapitalSave, vGridCapital
-real(8), dimension(:,:), allocatable :: mValueFuctionSave, mValueFunction, mPolicyCapital, mPolicyLabour
+real(8), dimension(:,:), allocatable :: mValueFuctionSave, mValueFunction, mPolicyCapital, mPolicyLabour, mPolicyConsumption
 
 integer:: SteadyState
 
@@ -29,7 +29,7 @@ integer:: SteadyState
 ! nGrids:= How many grids implemented; nMultiGrid:= Define grid size in each step
 nGrids = 3
 allocate (nMultiGrid(nGrids))
-nMultiGrid = (/ 178, 178, 178 /)
+nMultiGrid = (/ 100, 1000, 10000 /)
 
 ! INITIAL GUESS for Value function
 ! 1:= constant function equal zeros
@@ -91,6 +91,7 @@ end if
 allocate (mValueFunction(nGridOld,nGridProductivity))
 allocate (mPolicyCapital(nGridOld,nGridProductivity))
 allocate (mPolicyLabour(nGridOld,nGridProductivity))
+allocate (mPolicyConsumption(nGridOld,nGridProductivity))
 
 ! Initial guess for value function
 if (INITIAL_GUESS == 1) then
@@ -115,7 +116,7 @@ else
         call sub_makegrid(lowcapital,highcapital,nGridOld,curv,vGridCapital)
     end if
 
-    call sub_RBC_labour_solver(nGridOld,nGridOld,vGridCapital,mValueFunction,vGridCapital,mValueFunction,mPolicyCapital,mPolicyLabour)
+    call sub_RBC_labour_solver(nGridOld,nGridOld,vGridCapital,mValueFunction,vGridCapital,mValueFunction,mPolicyCapital,mPolicyLabour, mPolicyConsumption)
 
     vProductivity = (/0.9792, 0.9896, 1.0000, 1.0106, 1.0212/)
     if (STOCHASTIC == 1) then
@@ -132,8 +133,6 @@ end if
 ! solve RBC with a numerical solver for the labour supply given capital choice
 ! using zbrent from numerical recipes
 
-
-
 do cMultigrid=1,size(nMultiGrid)
     nGridNew=nMultiGrid(cMultigrid)
        
@@ -142,10 +141,12 @@ do cMultigrid=1,size(nMultiGrid)
     
     deallocate (mPolicyCapital)
     deallocate (mPolicyLabour)
+    deallocate (mPolicyConsumption)
+    allocate (mPolicyConsumption(nGridNew,nGridProductivity))
     allocate (mPolicyCapital(nGridNew,nGridProductivity))
     allocate (mPolicyLabour(nGridNew,nGridProductivity))
     
-    call sub_RBC_labour_Solver(nGridOld,nGridNew,vGridCapital,mValueFunction,vGridCapitalSave,mValueFuctionSave,mPolicyCapital,mPolicyLabour) 
+    call sub_RBC_labour_Solver(nGridOld,nGridNew,vGridCapital,mValueFunction,vGridCapitalSave,mValueFuctionSave,mPolicyCapital,mPolicyLabour, mPolicyConsumption) 
     
     deallocate(vGridCapital)
     allocate (vGridCapital(nGridNew))
@@ -160,9 +161,16 @@ do cMultigrid=1,size(nMultiGrid)
     nGridOld=nGridNew
 end do
 
-call sub_RBC_VFI(mValueFunction)
+call sub_EulerError(size(vGridCapital), vGridCapital, mPolicyLabour, mPolicyConsumption)
 
-call sub_RBC_EGM(nMultigrid(1),mValueFunction,mPolicyCapital,mPolicyLabour)
+call sub_RBC_EGM(nMultigrid(1))
+
+
+
+!call sub_RBC_VFI(mValueFunction)
+
+
+
 
 !----------------------------------------------------------------
 ! 5. PRODUCE OUTPUT FILE
@@ -173,7 +181,6 @@ call sub_Output(size(vGridCapital),vGridCapital,mValueFunction,mPolicyCapital,mP
 !----------------------------------------------------------------
 ! 5. PRINT MAIN RESULTS
 !----------------------------------------------------------------
-  
 
 timeInSeconds = times(3)*60.0+times(4)
 print *, 'Computing Time', timeInSeconds

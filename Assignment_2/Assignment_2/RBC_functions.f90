@@ -63,7 +63,7 @@ call sub_basefun(GridOld,np,point,vals,inds)
 value = vals(1)*valuegrid(inds(1))+vals(2)*valuegrid(inds(2))
 
 if (maxval(abs(vals(:)))>1.0) then
-    print* ,'extrapolation'
+    print* ,'extrapolation interpolation'
 end if
 
 
@@ -93,9 +93,9 @@ y=valuegrid(inds(2))-valuegrid(inds(1))
 
 derivative=y/x
 
-if (maxval(abs(vals(:)))>1.0) then
-    print* ,'extrapolation'
-end if
+!if (maxval(abs(vals(:)))>1.0) then
+!    print* ,'extrapolation derivative'
+!end if
 
 
 end subroutine sub_derivative

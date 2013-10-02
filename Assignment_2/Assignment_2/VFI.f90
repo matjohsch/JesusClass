@@ -12,12 +12,12 @@ subroutine sub_RBC_VFI(mValueFunction)
   
   implicit none
 
-  integer, parameter :: nGridCapital = 178
+  integer, parameter :: nGridCapital = 1000
   integer, parameter :: nGridProductivity = 5
   real(8), parameter :: tolerance = 0.0000001
   
   integer :: nCapital, nCapitalNextPeriod, gridCapitalNextPeriod, nProductivity, nProductivityNextPeriod
-  integer :: iteration
+  integer :: iteration,gc
         
   real :: elapsed(2), total
 
@@ -40,6 +40,7 @@ subroutine sub_RBC_VFI(mValueFunction)
 
   ! Productivity value
   vProductivity = (/0.9792, 0.9896, 1.0000, 1.0106, 1.0212/)
+ !vProductivity = (/1.0, 1.0, 1.0000, 1.0, 1.0/)
 
   ! Transition matrix
   mTransition = reshape( (/0.9727, 0.0273, 0., 0., 0., &
@@ -106,13 +107,13 @@ end do
                  valueHighSoFar = valueProvisional
                  capitalChoice = vGridCapital(nCapitalNextPeriod)
                  gridCapitalNextPeriod = nCapitalNextPeriod
-              else
-exit
-end if
+             else
+                 exit
+             end if
 
-end do
+            end do
 
-mValueFunctionNew(nCapital,nProductivity) = valueHighSoFar
+            mValueFunctionNew(nCapital,nProductivity) = valueHighSoFar
            mPolicyFunction(nCapital,nProductivity) = capitalChoice
                      
         end do
@@ -138,5 +139,12 @@ end do
 
 
   print *, 'Elapsed time is ', elapsed(1)
+
+
+open (unit = 3, file = 'VFI.txt', status = 'old')
+do gc = 1,nGridCapital
+   write (3,'(2f30.15)') vGridCapital(gc),mValueFunction(gc,3)!,mPolicyConsumption(gc,3)                          
+end do
+close (3)
 
 end subroutine sub_RBC_VFI
