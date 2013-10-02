@@ -62,9 +62,9 @@ call sub_basefun(GridOld,np,point,vals,inds)
 
 value = vals(1)*valuegrid(inds(1))+vals(2)*valuegrid(inds(2))
 
-if (maxval(abs(vals(:)))>1.0) then
-    print* ,'extrapolation interpolation'
-end if
+!if (maxval(abs(vals(:)))>1.0) then
+!    print* ,'extrapolation interpolation'
+!end if
 
 
 end subroutine sub_interpolation

@@ -46,6 +46,8 @@ HOWARD = 1
 ! STOCHASTIC:=1 - randomly distributed gridpoints 
 STOCHASTIC = 0
 
+
+Single=.false.
 !----------------------------------------------------------------
 ! 1. Calibration
 !----------------------------------------------------------------
@@ -163,8 +165,9 @@ end do
 
 call sub_EulerError(size(vGridCapital), vGridCapital, mPolicyLabour, mPolicyConsumption)
 
-call sub_RBC_EGM(nMultigrid(1))
-
+labourSteady=0
+!call sub_RBC_EGM(nMultigrid(1))
+call sub_RBC_EGM_labour(nMultigrid(2))
 
 
 !call sub_RBC_VFI(mValueFunction)

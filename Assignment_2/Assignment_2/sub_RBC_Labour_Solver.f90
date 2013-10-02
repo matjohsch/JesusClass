@@ -27,15 +27,6 @@ integer :: capitalChoice
 
 real(8) :: maxDifference
 
-! Numerical Solver
-! Zbrent/brac
-real(8),parameter::tolbre = 1.0e-16        ! tolerance level of zbrent
-real(8),parameter::ddx    = 1.0e-4         ! range of first bracket in zbrac
-real(8),parameter::errabs = 1.0e-6         ! absolute error level 
-
-
-real(8):: fsige,xa,xb
-logical:: succes
 
 ! Generation of New Grid 
 if (STOCHASTIC == 1) then
@@ -134,9 +125,9 @@ do while (maxDifference>tolerance)
             print *, 'Iteration:', iteration, 'Sup Diff:', MaxDifference
         end if
     end if
-    
-    mValueFunction = mValueFunctionNew 
 
+    mValueFunction = mValueFunctionNew 
+    if (single) exit
 end do
 
 call toc
