@@ -28,16 +28,15 @@
 		<File RelativePath=".\RBC_Parameter.f90"/>
 		<File RelativePath=".\RBC_Variable.f90"/></Filter>
 		<Filter Name="Resource Files" Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe">
+		<File RelativePath=".\Clock.f90"/>
 		<File RelativePath=".\RBC_Functions.f90"/>
 		<File RelativePath=".\Solver.f90"/></Filter>
 		<Filter Name="Source Files" Filter="f90;for;f;fpp;ftn;def;odl;idl">
-		<File RelativePath=".\Clock.f90"/>
-		<File RelativePath=".\sub_EulerError.f90"/>
 		<File RelativePath=".\RBC_Labour_Main.f90"/>
 		<File RelativePath=".\sub_RBC_EGM.f90"/>
 		<File RelativePath=".\sub_RBC_EGM_Labour.f90"/>
+		<File RelativePath=".\sub_RBC_EulerError.f90"/>
 		<File RelativePath=".\sub_RBC_Labour_Solver.f90"/>
 		<File RelativePath=".\sub_RBC_Output.f90"/>
-		<File RelativePath=".\sub_RBC_SteadyState.f90"/>
-		<File RelativePath=".\VFI.f90"/></Filter></Files>
+		<File RelativePath=".\sub_RBC_SteadyState.f90"/></Filter></Files>
 	<Globals/></VisualStudioProject>

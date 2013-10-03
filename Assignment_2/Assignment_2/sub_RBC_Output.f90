@@ -1,4 +1,4 @@
-subroutine sub_Output(n,vGridCapital,mValueFunction,mPolicyCapital,mPolicyLabour)
+subroutine sub_Output(n,vGridCapital,mValueFunction,mPolicyConsumption,mPolicyCapital,mPolicyLabour)
 
 use RBC_Variable
 

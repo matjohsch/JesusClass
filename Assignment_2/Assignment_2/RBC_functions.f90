@@ -74,40 +74,6 @@ end subroutine sub_interpolation
 !---------------------------------------------------------------------------------------
 subroutine sub_derivative(GridOld,valuegrid,np,point,derivative)
 
-! Interpolation
-
-implicit none
-integer::np
-real(8),dimension(np),intent(in)::GridOld,valuegrid
-real(8),intent(in)::point
-real(8),intent(out)::derivative
-real(8)::vals(2)
-real(8)::x,y
-
-integer inds(2)
-
-call sub_basefun(GridOld,np,point,vals,inds)
-
-x=gridold(inds(2))-gridold(inds(1))
-y=valuegrid(inds(2))-valuegrid(inds(1))
-
-derivative=y/x
-
-!if (maxval(abs(vals(:)))>1.0) then
-!    print* ,'extrapolation derivative'
-!end if
-
-
-end subroutine sub_derivative
-
-! --------------------------------------------------------------------------------------
-
-
-!---------------------------------------------------------------------------------------
-subroutine sub_derivative2(GridOld,valuegrid,np,point,derivative)
-
-! Interpolation
-
 implicit none
 integer::np
 real(8),dimension(np),intent(in)::GridOld,valuegrid
@@ -147,7 +113,7 @@ if (maxval(abs(vals(:)))>1.0) then
 end if
 
 
-end subroutine sub_derivative2
+end subroutine sub_derivative
 
 ! --------------------------------------------------------------------------------------
 

@@ -4,7 +4,6 @@ use RBC_Parameter
 use RBC_Variable
 use RBC_Functions
 use Solver
-use clock
 
 implicit none
 
@@ -15,7 +14,7 @@ real(8), dimension(nGridOld,nGridProductivity), intent(in) :: ValueOld
 real(8), dimension(nGridNew) ,intent(out) :: vGridCapital
 real(8), dimension(nGridNew,nGridProductivity), intent(out) :: mValueFunction
 
-integer :: cCapital, cProductivity, cCapitalNextPeriod
+integer :: iteration, cCapital, cProductivity, cCapitalNextPeriod
 integer :: gridCapitalNextPeriod
 
 real(8), dimension(nGridNew,nGridProductivity) :: mCapitalProd, mValueFunctionNew, expectedValueFunction
@@ -53,7 +52,6 @@ maxDifference = 10.0
 iteration = 0
 
 ! Starting Value Function Iteration
-call tic
 do while (maxDifference>tolerance)
     
     iteration = iteration+1
@@ -129,8 +127,6 @@ do while (maxDifference>tolerance)
     mValueFunction = mValueFunctionNew 
     if (single) exit
 end do
-
-call toc
 
 print *, 'Final Iteration:', iteration, 'Sup Diff:', MaxDifference
 print *, ' '

@@ -1,7 +1,7 @@
 !============================================================================
 ! Name : RBC_F90.f90
 ! Description : Basic RBC model with labour and partial depreciation
-! Date : September 25, 2013
+! Date : October 02, 2013
 !============================================================================
     
 program RBC_Labour_Main
@@ -9,6 +9,7 @@ program RBC_Labour_Main
 use RBC_Parameter
 use RBC_Variable
 use RBC_Functions
+use clock
 
 implicit none
 
@@ -29,7 +30,7 @@ integer:: SteadyState
 ! nGrids:= How many grids implemented; nMultiGrid:= Define grid size in each step
 nGrids = 3
 allocate (nMultiGrid(nGrids))
-nMultiGrid = (/ 100, 1000, 10000 /)
+nMultiGrid = (/ 100, 1000, 200000 /)
 
 ! INITIAL GUESS for Value function
 ! 1:= constant function equal zeros
@@ -42,16 +43,21 @@ INITIAL_GUESS = 2
 HOWARD = 1
 
 ! STOCHASTIC GRID
-! STOChASTIC:=0 - Equally spaced grid
-! STOCHASTIC:=1 - randomly distributed gridpoints 
+! STOChASTIC:= 0 - Equally spaced grid
+! STOCHASTIC:= 1 - randomly distributed gridpoints 
 STOCHASTIC = 0
 
+! ENDOGENOUS GRID
+! ENDOGENOUS:= 0 - VFI
+! ENDOGENOUS:= 1 - Endogenous Grid Method
+ENDOGENOUS = 0
 
 Single=.false.
+LabourSteady=.false.
+
 !----------------------------------------------------------------
 ! 1. Calibration
 !----------------------------------------------------------------
-
 ! Steady state Labour Supply (Calibration Target), for other parameter see module RBC_PARAMETER
 ! Either choose utility parameter pphi or steady state labour supply
 labourSteadyState = 0.3333333333      
@@ -69,7 +75,7 @@ call sub_SteadyState
 ! 3. Productivity Markov Chain and Initial Guess 
 !----------------------------------------------------------------
 
-! Productivity states
+! Productivity States
 vProductivity = (/0.9792, 0.9896, 1.0000, 1.0106, 1.0212/)
 ! Transition matrix
 mTransition = reshape( (/0.9727, 0.0273, 0.0,    0.0,    0.0, &
@@ -80,7 +86,7 @@ mTransition = reshape( (/0.9727, 0.0273, 0.0,    0.0,    0.0, &
 
 mTransition = transpose(mTransition)
 
-! Define initial grid for capital
+! Define Initial Grid for Capital
 nGridOld=nMultiGrid(1)
 allocate (vGridCapital(nGridOld))
 
@@ -95,29 +101,21 @@ allocate (mPolicyCapital(nGridOld,nGridProductivity))
 allocate (mPolicyLabour(nGridOld,nGridProductivity))
 allocate (mPolicyConsumption(nGridOld,nGridProductivity))
 
-! Initial guess for value function
-if (INITIAL_GUESS == 1) then
-    
-    mValueFunction = 0.0
-    
-else if (INITIAL_GUESS == 2) then    
-    
+! Initial Guess for Value Function
+if (INITIAL_GUESS == 1) then   
+    mValueFunction = 0.0   
+else if (INITIAL_GUESS == 2) then        
     mValueFunction = (log(consumptionSteadyState)-pphi*0.5*labourSteadyState**2)/(1.0-bbeta)
-
-else 
-    
-    ! Deterministic version
+else     
+    ! Deterministic Version   
     vProductivity = (/1.0000, 1.0000, 1.0000, 1.0000, 1.0000/)     
-    mValueFunction = 0.0
-    
-    nGridOld = nMultiGrid(1)
-    
+    mValueFunction = 0.0  
+    nGridOld = nMultiGrid(1)    
     if (STOCHASTIC == 1) then
         call sub_makerandomgrid(lowcapital,highcapital,nGridOld,vGridCapital)
     else
         call sub_makegrid(lowcapital,highcapital,nGridOld,curv,vGridCapital)
     end if
-
     call sub_RBC_labour_solver(nGridOld,nGridOld,vGridCapital,mValueFunction,vGridCapital,mValueFunction,mPolicyCapital,mPolicyLabour, mPolicyConsumption)
 
     vProductivity = (/0.9792, 0.9896, 1.0000, 1.0106, 1.0212/)
@@ -129,67 +127,82 @@ else
 end if    
 
 !----------------------------------------------------------------
-! Main Iteration - RBC
+! 4. Main Iteration 
 !----------------------------------------------------------------
 
-! solve RBC with a numerical solver for the labour supply given capital choice
-! using zbrent from numerical recipes
-
-do cMultigrid=1,size(nMultiGrid)
-    nGridNew=nMultiGrid(cMultigrid)
+call tic
+if (.not. ENDOGENOUS) then
+    !----------------------------------------------------------------
+    ! Value Function Iteration with a numerical solver (zbrent from numerical recipes) for the labour supply given capital choice
+    !----------------------------------------------------------------
+    do cMultigrid=1,size(nMultiGrid)
+        nGridNew=nMultiGrid(cMultigrid)
        
-    allocate (vGridCapitalSave(nGridNew))
-    allocate (mValueFuctionSave(nGridNew,nGridProductivity))
+        allocate (vGridCapitalSave(nGridNew))
+        allocate (mValueFuctionSave(nGridNew,nGridProductivity))
     
+        deallocate (mPolicyCapital)
+        deallocate (mPolicyLabour)
+        deallocate (mPolicyConsumption)
+        allocate (mPolicyConsumption(nGridNew,nGridProductivity))
+        allocate (mPolicyCapital(nGridNew,nGridProductivity))
+        allocate (mPolicyLabour(nGridNew,nGridProductivity))
+    
+        call sub_RBC_labour_Solver(nGridOld,nGridNew,vGridCapital,mValueFunction,vGridCapitalSave,mValueFuctionSave,mPolicyCapital,mPolicyLabour,mPolicyConsumption) 
+    
+        deallocate(vGridCapital)
+        allocate (vGridCapital(nGridNew))
+        vGridCapital=vGridCapitalSave
+    
+        deallocate(mValueFunction)
+        allocate (mValueFunction(nGridNew,nGridProductivity))
+        mValueFunction=mValueFuctionSave
+    
+        deallocate (vGridCapitalSave)
+        deallocate (mValueFuctionSave)
+        nGridOld=nGridNew
+    end do
+else
+    !----------------------------------------------------------------
+    ! Endogenous Grid Method
+    !----------------------------------------------------------------
+    nGridNew=nMultigrid(3)
+    deallocate(vGridCapital)
     deallocate (mPolicyCapital)
     deallocate (mPolicyLabour)
     deallocate (mPolicyConsumption)
-    allocate (mPolicyConsumption(nGridNew,nGridProductivity))
-    allocate (mPolicyCapital(nGridNew,nGridProductivity))
-    allocate (mPolicyLabour(nGridNew,nGridProductivity))
+    deallocate (mValueFunction)  
     
-    call sub_RBC_labour_Solver(nGridOld,nGridNew,vGridCapital,mValueFunction,vGridCapitalSave,mValueFuctionSave,mPolicyCapital,mPolicyLabour, mPolicyConsumption) 
-    
-    deallocate(vGridCapital)
-    allocate (vGridCapital(nGridNew))
-    vGridCapital=vGridCapitalSave
-    
-    deallocate(mValueFunction)
-    allocate (mValueFunction(nGridNew,nGridProductivity))
-    mValueFunction=mValueFuctionSave
-    
-    deallocate (vGridCapitalSave)
-    deallocate (mValueFuctionSave)
-    nGridOld=nGridNew
-end do
+    allocate (vGridCapital(nMultigrid(3)))
+    allocate (mPolicyConsumption(nMultigrid(3),nGridProductivity))
+    allocate (mPolicyCapital(nMultigrid(3),nGridProductivity))
+    allocate (mPolicyLabour(nMultigrid(3),nGridProductivity))
+    allocate (mValueFunction(nMultigrid(3),nGridProductivity))
+    call sub_RBC_EGM_labour(nMultigrid(3), vGridCapital, mValueFunction, mPolicyConsumption, mPolicyCapital, mPolicyLabour)
+end if
+call toc
+
+!----------------------------------------------------------------
+! 5. MEASURING ACCURACY BY EULER EQUATION ERROR
+!----------------------------------------------------------------
 
 call sub_EulerError(size(vGridCapital), vGridCapital, mPolicyLabour, mPolicyConsumption)
 
-labourSteady=0
-!call sub_RBC_EGM(nMultigrid(1))
-call sub_RBC_EGM_labour(nMultigrid(2))
-
-
-!call sub_RBC_VFI(mValueFunction)
-
-
-
-
 !----------------------------------------------------------------
-! 5. PRODUCE OUTPUT FILE
+! 6. PRODUCE OUTPUT FILE
 !----------------------------------------------------------------
 
-call sub_Output(size(vGridCapital),vGridCapital,mValueFunction,mPolicyCapital,mPolicyLabour)
+call sub_Output(size(vGridCapital),vGridCapital, mValueFunction, mPolicyConsumption, mPolicyCapital, mPolicyLabour)
 
 !----------------------------------------------------------------
-! 5. PRINT MAIN RESULTS
+! 7. PRINT MAIN RESULTS
 !----------------------------------------------------------------
 
 timeInSeconds = times(3)*60.0+times(4)
 print *, 'Computing Time', timeInSeconds
 print *, ' '
 !
-if (STOCHASTIC ==1) then
+if (STOCHASTIC == 1 .OR. ENDOGENOUS == 1 ) then
     call sub_interpolation(vGridCapital,mPolicyCapital(:,3),nGridNew,capitalSteadyState,capital)
     call sub_interpolation(vGridCapital,mPolicyLabour(:,3),nGridNew,capitalSteadyState,labour)
 else

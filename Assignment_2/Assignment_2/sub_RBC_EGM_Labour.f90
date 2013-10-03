@@ -1,52 +1,48 @@
-subroutine sub_RBC_EGM_Labour(nGridCapital)
+subroutine sub_RBC_EGM_Labour(nGridCapital, vGridCapitalNext, mValueFunction, mPolicyConsumption, mPolicyCapital, mPolicyLabour)
     
 use RBC_Parameter    
 use RBC_Variable
 use RBC_Functions
 use Solver
-use Clock
     
 implicit none
 
 integer, intent(in)::nGridCapital
+real(8),dimension(nGridCapital),intent(out) :: vGridCapitalNext
+real(8),dimension(nGridCapital,nGridProductivity),intent(out) :: mValueFunction, mPolicyConsumption, mPolicyCapital, mPolicyLabour
 
-real(8),dimension(nGridCapital) :: vGridCapitalNext
-real(8),dimension(nGridCapital,nGridProductivity) :: mValueFunction, mPolicyConsumption, mPolicyCapital, mPolicyLabour
-
-integer :: cCapital, cCapitalNext, cProd , gc
+integer :: cCapital, cCapitalNext, cProd, iteration, iteration1
 
 real(8) :: maxDifference, maxDifference1, derivative
 
-real(8),dimension(nGridCapital,nGridProductivity) :: mValueFunctionold, Vtilde, Vtildeold, Vendo, VY
-real(8),dimension(nGridCapital,nGridProductivity) :: CapitalEndo, vGridCapitalEndo, LabourEndo
+real(8),dimension(nGridCapital,nGridProductivity) :: CapitalEndo, vGridCapitalEndo, LabourEndo, mValueFunctionold, Vtilde, Vtildeold, VEndogenous, VY
 
 
 ! Define Grids for Capital and prepare Guess for Valuefunction
 lowcapital = 0.1
-highcapital = 6.00
+highcapital = 5.00
 call sub_makegrid(lowcapital,highcapital,nGridCapital,curv,vGridCapitalNext)
 
 !Step 1 Compute Value Function with EGM and SteadyState Labour Supply
-labourSteady=.true.
-call sub_RBC_EGM(nGridCapital,vGridCapitalEndo,mValueFunction)
+labourSteady = .true.
+call sub_RBC_EGM(nGridCapital, vGridCapitalEndo, mValueFunction)
 
 ! Step 2 - Recover PolicyFunction by VFI using the guess from EGM-SteadyState
-Vendo=mValueFunction
+VEndogenous = mValueFunction
 do cProd = 1,nGridProductivity        
     do cCapitalNext = 1,nGridCapital
-        call sub_interpolation(vGridCapitalEndo(:,cProd),Vendo(:,cProd),nGridCapital,vGridCapitalNext(cCapitalNext),mValueFunction(cCapitalNext,cProd))
+        call sub_interpolation(vGridCapitalEndo(:,cProd),VEndogenous(:,cProd),nGridCapital,vGridCapitalNext(cCapitalNext),mValueFunction(cCapitalNext,cProd))
     end do
 end do
         
-single=.true.
+single = .true.
 call sub_RBC_Labour_Solver(nGridCapital,nGridCapital,vGridCapitalNext,mValueFunction,vGridCapitalNext,mValueFunction,mPolicyCapital,mPolicyLabour,mPolicyConsumption)
-single=.false.
 
 ! Step 3 - Using LabourPolicy Function from previous VFI to compute EGM 
 maxDifference1 = 10.0
-
+iteration1 = 0
 do while (maxDifference1>tolerance)
-
+    iteration1 = iteration1 + 1
     ! 3(a) -Find according CapitalEndo that leads to CapitalNextPeriod 
     do cProd = 1,nGridProductivity        
         do cCapitalNext = 1,nGridCapital
@@ -65,16 +61,16 @@ do while (maxDifference1>tolerance)
     iteration = 0
     
     ! 3(c) Take Expectations of Value Function  
-    Vtilde=bbeta*matmul(mValueFunction,transpose(mTransition))
+    Vtilde = bbeta*matmul(mValueFunction,transpose(mTransition))
     
-    do while (maxDifference>tolerance)
+    do while (maxDifference>tolerance .and. iteration.lt.100)
         iteration = iteration + 1
         
         ! 3(d) Compute given CapitalNext and LabourEndo optimal c and according CapitalToday
         do cProd = 1,nGridProductivity        
             do cCapitalNext = 1,nGridCapital
-                call sub_derivative2(vGridCapitalNext,Vtilde(:,cProd),nGridCapital,cCapitalNext,derivative)
-                mPolicyConsumption(cCapitalNext,cProd)=1.0/derivative
+                call sub_derivative(vGridCapitalNext,Vtilde(:,cProd),nGridCapital,cCapitalNext,derivative)
+                mPolicyConsumption(cCapitalNext,cProd) = 1.0/derivative
                 
                 ! Solve nonlinear function for CapitalToday
                 xa = log(1.0)
@@ -89,14 +85,14 @@ do while (maxDifference1>tolerance)
                 CapitalEndo(cCapitalNext,cProd) = exp(xb)
                 
                 ! 3(e) - Update ValueFunction ...
-                Vendo(cCapitalNext,cProd)=log(mPolicyConsumption(cCapitalNext,cProd))-pphi/2.0*LabourEndo(cCapitalNext,cProd)**2.0+Vtilde(cCapitalNext,cProd)
+                VEndogenous(cCapitalNext,cProd) = log(mPolicyConsumption(cCapitalNext,cProd)) - pphi/2.0*LabourEndo(cCapitalNext,cProd)**2.0 + Vtilde(cCapitalNext,cProd)
             end do
         end do
         
         ! 3(e) ... and interpolate it on GridCapitalNext 
         do cProd = 1,nGridProductivity        
             do cCapitalNext = 1,nGridCapital
-               call sub_interpolation(CapitalEndo(:,cProd),Vendo(:,cProd),nGridCapital, vGridCapitalNext(cCapitalNext),VY(cCapitalNext,cProd)) 
+               call sub_interpolation(CapitalEndo(:,cProd),VEndogenous(:,cProd),nGridCapital, vGridCapitalNext(cCapitalNext),VY(cCapitalNext,cProd)) 
             end do 
         end do
         
@@ -108,7 +104,7 @@ do while (maxDifference1>tolerance)
         end do
         
         ! 3(g) - Take expectations of Value Function
-        Vtilde=bbeta*matmul(VY,transpose(mTransition))
+        Vtilde = bbeta*matmul(VY,transpose(mTransition))
 
         ! 3(h)- Compute convergence criterion
         maxDifference = maxval((abs(Vtildeold-Vtilde)))
@@ -120,24 +116,14 @@ do while (maxDifference1>tolerance)
     end do   
     
     ! back to step 2
-    mValueFunction=VY
-    single=.true.
+    mValueFunction = VY
     call sub_RBC_Labour_Solver(nGridCapital,nGridCapital,vGridCapitalNext,mValueFunction,vGridCapitalNext,mValueFunction,mPolicyCapital,mPolicyLabour,mPolicyConsumption)
-    single=.false.
     
     maxDifference1 = maxval((abs(mValueFunctionold-mValueFunction)))
+    print *, 'Iteration on Value Function:', iteration1, 'Sup Diff:', MaxDifference1
+    print *,''
     mValueFunctionold=mValueFunction
 end do
-
-call sub_EulerError(nGridCapital, vGridCapitalNext, mPolicyLabour, mPolicyConsumption)
-
-open (unit = 2, file = 'EGM.txt', status = 'old')
-do gc = 1,nGridCapital
-   write (2,'(3f30.15)') vGridCapitalNext(gc),mValueFunction(gc,3),mPolicyConsumption(gc,3)                          
-end do
-close (2)
-
-pause
 
 contains
 
