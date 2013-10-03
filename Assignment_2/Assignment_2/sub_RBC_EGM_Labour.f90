@@ -7,15 +7,14 @@ use Solver
     
 implicit none
 
-integer, intent(in)::nGridCapital
-real(8),dimension(nGridCapital),intent(out) :: vGridCapitalNext
-real(8),dimension(nGridCapital,nGridProductivity),intent(out) :: mValueFunction, mPolicyConsumption, mPolicyCapital, mPolicyLabour
+integer, intent(in) :: nGridCapital
+real (8), dimension(nGridCapital), intent(out) :: vGridCapitalNext
+real (8), dimension(nGridCapital,nGridProductivity), intent(out) :: mValueFunction, mPolicyConsumption, mPolicyCapital, mPolicyLabour
 
 integer :: cCapital, cCapitalNext, cProd, iteration, iteration1
 
 real(8) :: maxDifference, maxDifference1, derivative
-
-real(8),dimension(nGridCapital,nGridProductivity) :: CapitalEndo, vGridCapitalEndo, LabourEndo, mValueFunctionold, Vtilde, Vtildeold, VEndogenous, VY
+real(8), dimension(nGridCapital,nGridProductivity) :: vGridCapitalEndo, mPolicyLabourEndo, mValueFunctionold, Vtilde, Vtildeold, VEndogenous, VY
 
 
 ! Define Grids for Capital and prepare Guess for Valuefunction
@@ -27,7 +26,7 @@ call sub_makegrid(lowcapital,highcapital,nGridCapital,curv,vGridCapitalNext)
 labourSteady = .true.
 call sub_RBC_EGM(nGridCapital, vGridCapitalEndo, mValueFunction)
 
-! Step 2 - Recover PolicyFunction by VFI using the guess from EGM-SteadyState
+! Step 2 - Recover PolicyFunction by VFI using Result from EGM-SteadyState as Initial Guess
 VEndogenous = mValueFunction
 do cProd = 1,nGridProductivity        
     do cCapitalNext = 1,nGridCapital
@@ -43,17 +42,17 @@ maxDifference1 = 10.0
 iteration1 = 0
 do while (maxDifference1>tolerance)
     iteration1 = iteration1 + 1
-    ! 3(a) -Find according CapitalEndo that leads to CapitalNextPeriod 
+    ! 3(a) -Find according vGridCapitalEndo that leads to CapitalNextPeriod 
     do cProd = 1,nGridProductivity        
         do cCapitalNext = 1,nGridCapital
-          call sub_interpolation(mPolicyCapital(:,cProd),vGridCapitalNext,nGridCapital,vGridCapitalNext(cCapitalNext),CapitalEndo(cCapitalNext,Cprod))
+          call sub_interpolation(mPolicyCapital(:,cProd),vGridCapitalNext,nGridCapital,vGridCapitalNext(cCapitalNext),vGridCapitalEndo(cCapitalNext,Cprod))
         end do
     end do
     
-    !3(b) - Find the Labour Policy Function that belongs to CapitalEndo
+    !3(b) - Find the Labour Policy Function that belongs to vGridCapitalEndo
     do cProd = 1,nGridProductivity        
         do cCapitalNext = 1,nGridCapital
-          call sub_interpolation(vGridCapitalNext,mPolicyLabour(:,cProd),nGridCapital,CapitalEndo(cCapitalNext,Cprod),LabourEndo(cCapitalNext,Cprod))
+          call sub_interpolation(vGridCapitalNext,mPolicyLabour(:,cProd),nGridCapital,vGridCapitalEndo(cCapitalNext,Cprod),mPolicyLabourEndo(cCapitalNext,Cprod))
         end do
     end do
 
@@ -61,45 +60,45 @@ do while (maxDifference1>tolerance)
     iteration = 0
     
     ! 3(c) Take Expectations of Value Function  
-    Vtilde = bbeta*matmul(mValueFunction,transpose(mTransition))
+    Vtilde = bbeta * matmul(mValueFunction,transpose(mTransition))
     
-    do while (maxDifference>tolerance .and. iteration.lt.100)
+    do while (maxDifference>tolerance .and. iteration<=100)
         iteration = iteration + 1
         
-        ! 3(d) Compute given CapitalNext and LabourEndo optimal c and according CapitalToday
+        ! 3(d) Compute given CapitalNext and mPolicyLabourEndo optimal c and according CapitalToday
         do cProd = 1,nGridProductivity        
             do cCapitalNext = 1,nGridCapital
                 call sub_derivative(vGridCapitalNext,Vtilde(:,cProd),nGridCapital,cCapitalNext,derivative)
-                mPolicyConsumption(cCapitalNext,cProd) = 1.0/derivative
+                mPolicyConsumption(cCapitalNext,cProd) = 1.0 / derivative
                 
                 ! Solve nonlinear function for CapitalToday
                 xa = log(1.0)
-                xb = xa+log(ddx)           
-                call  zbrac(f_endolabour,xa,xb,succes)
-                xb = zbrent(f_endolabour,xa,xb,tolbre)
-                fsige = f_endolabour(xb)
-                if (abs(fsige) .gt. 0.000001) then
+                xb = xa + log(ddx)           
+                call  zbrac(f_CapEndo,xa,xb,succes)
+                xb = zbrent(f_CapEndo,xa,xb,tolbre)
+                fsige = f_CapEndo(xb)
+                if (abs(fsige) >= 0.000001) then
                     print*, 'failed to compute capital out of cash on hand'
                     pause
                 end if
-                CapitalEndo(cCapitalNext,cProd) = exp(xb)
+                vGridCapitalEndo(cCapitalNext,cProd) = exp(xb)
                 
                 ! 3(e) - Update ValueFunction ...
-                VEndogenous(cCapitalNext,cProd) = log(mPolicyConsumption(cCapitalNext,cProd)) - pphi/2.0*LabourEndo(cCapitalNext,cProd)**2.0 + Vtilde(cCapitalNext,cProd)
+                VEndogenous(cCapitalNext,cProd) = log(mPolicyConsumption(cCapitalNext,cProd)) - pphi / 2.0 * mPolicyLabourEndo(cCapitalNext,cProd)**2.0 + Vtilde(cCapitalNext,cProd)
             end do
         end do
         
         ! 3(e) ... and interpolate it on GridCapitalNext 
         do cProd = 1,nGridProductivity        
             do cCapitalNext = 1,nGridCapital
-               call sub_interpolation(CapitalEndo(:,cProd),VEndogenous(:,cProd),nGridCapital, vGridCapitalNext(cCapitalNext),VY(cCapitalNext,cProd)) 
+               call sub_interpolation(vGridCapitalEndo(:,cProd),VEndogenous(:,cProd),nGridCapital, vGridCapitalNext(cCapitalNext),VY(cCapitalNext,cProd)) 
             end do 
         end do
         
-        ! 3(f) - Find again the Labour Policy Function that belongs to the now new CapitalEndo
+        ! 3(f) - Find again the Labour Policy Function that belongs to the now new vGridCapitalEndo
         do cProd = 1,nGridProductivity        
           do cCapitalNext = 1,nGridCapital
-             call sub_interpolation(vGridCapitalNext,mPolicyLabour(:,cProd),nGridCapital,CapitalEndo(cCapitalNext,Cprod),LabourEndo(cCapitalNext,Cprod))
+             call sub_interpolation(vGridCapitalNext,mPolicyLabour(:,cProd),nGridCapital,vGridCapitalEndo(cCapitalNext,Cprod),mPolicyLabourEndo(cCapitalNext,Cprod))
           end do
         end do
         
@@ -128,17 +127,17 @@ end do
 contains
 
 !---------------------------------------------------------------------------------------
-function f_endolabour(x) 
+function f_CapEndo(x) 
 
-real(8),intent(in)::x
-real(8)::xtransformed
-real(8)::f_endolabour
+real (8), intent(in):: x
+real (8) :: xtransformed
+real (8) :: f_CapEndo
 
 xtransformed = exp(x)
 
-f_endolabour = mPolicyConsumption(cCapitalNext,Cprod)+VgridCapitalNext(cCapitalNext)-vProductivity(cProd)*LabourEndo(cCapitalNext,Cprod)**(1.0-aalpha)*xtransformed**aalpha-(1.0-ddelta)*xtransformed
+f_CapEndo = mPolicyConsumption(cCapitalNext,Cprod) + VgridCapitalNext(cCapitalNext) - vProductivity(cProd) * xtransformed**aalpha * mPolicyLabourEndo(cCapitalNext,Cprod)**(1.0-aalpha) - (1.0-ddelta) * xtransformed
 
-end function f_endolabour
+end function f_CapEndo
 !---------------------------------------------------------------------------------------
 
 end subroutine sub_RBC_EGM_labour

@@ -1,4 +1,4 @@
-subroutine sub_RBC_EGM(nGrid, vGridCapitalEndo, mValueFunction)
+subroutine sub_RBC_EGM(nGridCapital, vGridCapitalEndo, mValueFunction)
     
 use RBC_Parameter    
 use RBC_Variable
@@ -7,28 +7,28 @@ use Solver
     
 implicit none
 
-integer, intent(in)::nGrid
+integer, intent(in) :: nGridCapital
 
-integer :: iteration, cCapitalNext, cProd, gc
+integer :: iteration, cCapitalNext, cProd, cOut
 
-real(8) :: maxDifference,derivative
-real(8),dimension(nGrid) :: vGridCapitalNext
-real(8),dimension(nGrid,nGridProductivity) :: mValueFunction,VEndogenous,VY,Vtilde,Vtildeold,GridY,mPolicyConsumption,vGridCapitalEndo,GridYendo
+real (8) :: maxDifference, derivative
+real (8), dimension(nGridCapital) :: vGridCapitalNext
+real (8), dimension(nGridCapital,nGridProductivity) :: mValueFunction, VEndogenous, VY, Vtilde, Vtildeold, GridY, mPolicyConsumption, vGridCapitalEndo, GridYendo
 
-call sub_makegrid(lowcapital,highcapital,nGrid,curv,vGridCapitalNext)
+call sub_makegrid(lowcapital,highcapital,nGridCapital,curv,vGridCapitalNext)
 
 if (labourSteady) then 
     do cProd = 1,nGridProductivity
-       do cCapitalNext =1, nGrid
-          GridY(cCapitalNext,cProd)=vProductivity(cProd)* vGridCapitalNext(cCapitalNext)**aalpha*labourSteadyState**(1.0-aalpha)+(1.0-ddelta)*vGridCapitalNext(cCapitalNext)
-          Vtilde(cCapitalNext,cProd)=log(vGridCapitalNext(cCapitalNext))-pphi/2.0*labourSteadyState**2.0
+       do cCapitalNext = 1,nGridCapital
+          GridY(cCapitalNext,cProd) = vProductivity(cProd) * vGridCapitalNext(cCapitalNext)**aalpha * labourSteadyState**(1.0 - aalpha) + (1.0 - ddelta) * vGridCapitalNext(cCapitalNext)
+          Vtilde(cCapitalNext,cProd) = log(vGridCapitalNext(cCapitalNext)) - pphi / 2.0 * labourSteadyState**2.0
        end do   
     end do
 else
     do cProd = 1,nGridProductivity
-       do cCapitalNext =1, nGrid
-          GridY(cCapitalNext,cProd)=vProductivity(cProd)* vGridCapitalNext(cCapitalNext)**aalpha+(1.0-ddelta)*vGridCapitalNext(cCapitalNext)
-          Vtilde(cCapitalNext,cProd)=log(vGridCapitalNext(cCapitalNext))
+       do cCapitalNext = 1,nGridCapital
+          GridY(cCapitalNext,cProd) = vProductivity(cProd) * vGridCapitalNext(cCapitalNext)**aalpha + (1.0 - ddelta) * vGridCapitalNext(cCapitalNext)
+          Vtilde(cCapitalNext,cProd) = log(vGridCapitalNext(cCapitalNext))
        end do   
     end do
 end if
@@ -39,24 +39,25 @@ iteration = 0
 do while (maxDifference>tolerance)
     iteration = iteration + 1
     do cProd = 1,nGridProductivity        
-        do cCapitalNext = 1,nGrid
-            call sub_derivative(vGridCapitalNext,Vtilde(:,cProd),ngrid,cCapitalNext,derivative)
-            mPolicyConsumption(cCapitalNext,cProd)=1.0/derivative
-            GridYendo(cCapitalNext,cProd)=mPolicyConsumption(cCapitalNext,cProd)+vGridCapitalNext(cCapitalNext)
+        do cCapitalNext = 1,nGridCapital
+            call sub_derivative(vGridCapitalNext,Vtilde(:,cProd),nGridCapital,cCapitalNext,derivative)
+            
+            mPolicyConsumption(cCapitalNext,cProd) = 1.0 / derivative
+            GridYendo(cCapitalNext,cProd) = mPolicyConsumption(cCapitalNext,cProd) + vGridCapitalNext(cCapitalNext)
+            
             if (labourSteady) then
-                VEndogenous(cCapitalNext,cProd)=log(mPolicyConsumption(cCapitalNext,cProd))-pphi/2.0*labourSteadyState**2.0+Vtilde(cCapitalNext,cProd)
+                VEndogenous(cCapitalNext,cProd) = log(mPolicyConsumption(cCapitalNext,cProd)) - pphi / 2.0 * labourSteadyState**2.0 + Vtilde(cCapitalNext,cProd)
             else
-                VEndogenous(cCapitalNext,cProd)=log(mPolicyConsumption(cCapitalNext,cProd))+Vtilde(cCapitalNext,cProd)              
-             end if            
-        
+                VEndogenous(cCapitalNext,cProd) = log(mPolicyConsumption(cCapitalNext,cProd)) + Vtilde(cCapitalNext,cProd)              
+             end if                   
         end do
     end do
     do cProd = 1,nGridProductivity        
-        do cCapitalNext = 1,nGrid
-           call sub_interpolation(GridYendo(:,cProd),VEndogenous(:,cProd),nGrid, GridY(cCapitalNext,cProd),VY(cCapitalNext,cProd)) 
+        do cCapitalNext = 1,nGridCapital
+           call sub_interpolation(GridYendo(:,cProd),VEndogenous(:,cProd),nGridCapital, GridY(cCapitalNext,cProd),VY(cCapitalNext,cProd)) 
         end do 
     end do
-    Vtilde=bbeta*matmul(VY,transpose(mTransition))
+    Vtilde = bbeta * matmul(VY,transpose(mTransition))
 
     maxDifference = maxval((abs(Vtildeold-Vtilde)))
     if (mod(iteration,10) == 0 .OR. iteration == 1) then        
@@ -66,10 +67,10 @@ do while (maxDifference>tolerance)
     Vtildeold = Vtilde     
 end do    
 
-mValueFunction=VEndogenous
+mValueFunction = VEndogenous
 
 do cProd = 1,nGridProductivity   
-    do cCapitalNext = 1,nGrid
+    do cCapitalNext = 1,nGridCapital
         xa = log(1.0)
         xb = xa+log(ddx)
 
@@ -91,15 +92,15 @@ contains
 !---------------------------------------------------------------------------------------
 function f_endo(x) 
 
-real(8),intent(in)::x
-real(8)::xtransformed
-real(8)::f_endo
+real (8), intent(in) :: x
+real (8) :: xtransformed
+real (8) :: f_endo
 
 xtransformed = exp(x)
 if (labourSteady) then
-    f_endo = gridYendo(cCapitalNext,cProd) - vProductivity(cProd)*xtransformed**aalpha*labourSteadyState**(1.0-aalpha)-(1.0-ddelta)*xtransformed
+    f_endo = gridYendo(cCapitalNext,cProd) - vProductivity(cProd) * xtransformed**aalpha * labourSteadyState**(1.0-aalpha) - (1.0-ddelta) * xtransformed
 else
-    f_endo = gridYendo(cCapitalNext,cProd) - vProductivity(cProd)*xtransformed**aalpha-(1.0-ddelta)*xtransformed
+    f_endo = gridYendo(cCapitalNext,cProd) - vProductivity(cProd) * xtransformed**aalpha - (1.0-ddelta) * xtransformed
 end if
 
 end function f_endo

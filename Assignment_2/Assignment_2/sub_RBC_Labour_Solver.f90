@@ -8,23 +8,22 @@ use Solver
 implicit none
 
 integer, intent(in):: nGridNew, nGridOld
-real(8), dimension(nGridOld),intent(in) :: GridOld
+real(8), dimension(nGridOld), intent(in) :: GridOld
 real(8), dimension(nGridOld,nGridProductivity), intent(in) :: ValueOld
 
-real(8), dimension(nGridNew) ,intent(out) :: vGridCapital
+real(8), dimension(nGridNew), intent(out) :: vGridCapital
 real(8), dimension(nGridNew,nGridProductivity), intent(out) :: mValueFunction
 
 integer :: iteration, cCapital, cProductivity, cCapitalNextPeriod
 integer :: gridCapitalNextPeriod
-
-real(8), dimension(nGridNew,nGridProductivity) :: mCapitalProd, mValueFunctionNew, expectedValueFunction
-real(8), dimension(nGridNew,nGridProductivity) :: mPolicyCapital, mPolicyCapitalIndex, mPolicyLabour, mPolicyConsumption
+integer :: capitalChoice
 
 real(8) :: valueHighSoFar, valueProvisional
 real(8) :: labour, cons, labourChoice
-integer :: capitalChoice
-
 real(8) :: maxDifference
+
+real(8), dimension(nGridNew,nGridProductivity) :: mCapitalProd, mValueFunctionNew, expectedValueFunction
+real(8), dimension(nGridNew,nGridProductivity) :: mPolicyCapital, mPolicyCapitalIndex, mPolicyLabour, mPolicyConsumption
 
 
 ! Generation of New Grid 
@@ -70,24 +69,24 @@ do while (maxDifference>tolerance)
                 do cCapitalNextPeriod = gridCapitalNextPeriod , nGridNew
                 
                     xa = log(1.0)
-                    xb = xa+log(ddx)
+                    xb = xa + log(ddx)
 
-                    call  zbrac(f_labour,xa,xb,succes)
-                    xb = zbrent(f_labour,xa,xb,tolbre)
+                    call zbrac(f_LabourOpt,xa,xb,succes)
+                    xb = zbrent(f_LabourOpt,xa,xb,tolbre)
 
-                    fsige = f_labour(xb)
+                    fsige = f_LabourOpt(xb)
                     if (abs(fsige) .gt. 0.000001) then
-                       print*, 'failed to compute labour supply'
+                       print *,'failed to compute labour supply'
                        pause
                     end if
 
                     labour = exp(xb)
-                    cons = (1-ddelta)*vGridCapital(cCapital) + mCapitalProd(cCapital,cProductivity) *  labour**(1.0-aalpha) - vGridCapital(cCapitalNextPeriod)                                     
+                    cons = (1-ddelta) * vGridCapital(cCapital) + mCapitalProd(cCapital,cProductivity) *  labour**(1.0-aalpha) - vGridCapital(cCapitalNextPeriod)                                     
                     
                     if (cons < 0.0) then
-                        print*, 'negative consumption'
+                        print *,'negative consumption'
                     else
-                        valueProvisional = log(cons)-pphi*0.50* labour**2.0+bbeta*expectedValueFunction(cCapitalNextPeriod,cProductivity)
+                        valueProvisional = log(cons) - pphi / 2.0 * labour**2.0 + bbeta * expectedValueFunction(cCapitalNextPeriod,cProductivity)
                     end if
                     if (valueProvisional > valueHighSoFar) then ! we break when we have achieved the max
                         valueHighSoFar = valueProvisional
@@ -110,7 +109,7 @@ do while (maxDifference>tolerance)
 
             else 
                                     
-                mValueFunctionNew(cCapital,cProductivity) = log(mPolicyConsumption(cCapital,cProductivity)) -pphi*0.50* mPolicyLabour(cCapital,cProductivity)**2.0 + bbeta*expectedValueFunction(mPolicyCapitalIndex(cCapital,cProductivity),cProductivity)
+                mValueFunctionNew(cCapital,cProductivity) = log(mPolicyConsumption(cCapital,cProductivity)) - pphi /2.0 * mPolicyLabour(cCapital,cProductivity)**2.0 + bbeta * expectedValueFunction(mPolicyCapitalIndex(cCapital,cProductivity),cProductivity)
             
             end if
      
@@ -134,17 +133,17 @@ print *, ' '
 contains
 
 !---------------------------------------------------------------------------------------
-function f_labour(x) 
+function f_LabourOpt(x) 
 
-real(8),intent(in)::x
-real(8)::xtransformed
-real(8)::f_labour
+real(8), intent(in) :: x
+real(8) :: xtransformed
+real(8) :: f_LabourOpt
 
 xtransformed = exp(x)
 
-f_labour = mCapitalProd(cCapital,cProductivity) *(xtransformed**(1.0-aalpha)-(1.0-aalpha)/pphi*xtransformed**(-aalpha-1.0)) - vGridCapital(cCapitalNextPeriod) + (1.0-ddelta)*vgridCapital(cCapital)
+f_LabourOpt = mCapitalProd(cCapital,cProductivity) * (xtransformed**(1.0-aalpha) - (1.0-aalpha) / pphi * xtransformed**(-aalpha-1.0)) - vGridCapital(cCapitalNextPeriod) + (1.0-ddelta) * vgridCapital(cCapital)
 
-end function f_labour
+end function f_LabourOpt
 !---------------------------------------------------------------------------------------
     
 end subroutine sub_RBC_Labour_Solver
