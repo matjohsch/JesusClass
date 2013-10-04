@@ -11,6 +11,8 @@ integer :: INITIAL_GUESS
 
 logical :: Single           
 logical :: LabourSteady  
+integer:: nGridProducts
+
 
 real (8) :: pphi, x, labourSteadyState
 real (8) :: capitalSteadyState, outputSteadyState, consumptionSteadyState

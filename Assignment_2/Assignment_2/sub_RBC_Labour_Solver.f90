@@ -9,10 +9,10 @@ implicit none
 
 integer, intent(in):: nGridNew, nGridOld
 real(8), dimension(nGridOld), intent(in) :: GridOld
-real(8), dimension(nGridOld,nGridProductivity), intent(in) :: ValueOld
+real(8), dimension(nGridOld,nGridProducts), intent(in) :: ValueOld
 
 real(8), dimension(nGridNew), intent(out) :: vGridCapital
-real(8), dimension(nGridNew,nGridProductivity), intent(out) :: mValueFunction
+real(8), dimension(nGridNew,nGridProducts), intent(out) :: mValueFunction
 
 integer :: iteration, cCapital, cProductivity, cCapitalNextPeriod
 integer :: gridCapitalNextPeriod
@@ -22,8 +22,8 @@ real(8) :: valueHighSoFar, valueProvisional
 real(8) :: labour, cons, labourChoice
 real(8) :: maxDifference
 
-real(8), dimension(nGridNew,nGridProductivity) :: mCapitalProd, mValueFunctionNew, expectedValueFunction
-real(8), dimension(nGridNew,nGridProductivity) :: mPolicyCapital, mPolicyCapitalIndex, mPolicyLabour, mPolicyConsumption
+real(8), dimension(nGridNew,nGridProducts) :: mCapitalProd, mValueFunctionNew, expectedValueFunction
+real(8), dimension(nGridNew,nGridProducts) :: mPolicyCapital, mPolicyCapitalIndex, mPolicyLabour, mPolicyConsumption
 
 
 ! Generation of New Grid 
@@ -34,14 +34,14 @@ else
 end if
 
 ! Interpolation of new Gridpoints at old Grid
-do cProductivity = 1,nGridProductivity 
+do cProductivity = 1,nGridProducts 
     do cCapital = 1,nGridNew
         call sub_interpolation(GridOld,ValueOld(:,cProductivity),nGridOld,vGridCapital(cCapital),mValueFunction(cCapital,cProductivity))
     end do
 end do
 
 ! Capital State times Productivity State
-do cProductivity = 1, nGridProductivity
+do cProductivity = 1, nGridProducts
     do cCapital = 1, nGridNew
         mCapitalProd(cCapital, cProductivity) = vProductivity(cProductivity)*vGridCapital(cCapital)**aalpha
     end do
@@ -57,7 +57,7 @@ do while (maxDifference>tolerance)
     
     expectedValueFunction = matmul(mValueFunction,transpose(mTransition));
 
-    do cProductivity = 1,nGridProductivity               
+    do cProductivity = 1,nGridProducts               
          
         gridCapitalNextPeriod = 1
         do cCapital = 1,nGridNew

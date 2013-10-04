@@ -4,7 +4,7 @@ implicit none
     
 integer, parameter  :: nGridProductivity = 5  ! number of technology states
 real (8), parameter :: curv = 1.0             ! curvature of grids
-real (8), parameter :: tolerance = 1.0e-5     ! convergence tolerance level 
+real (8), parameter :: tolerance = 1.0e-6    ! convergence tolerance level 
     
 real (8), parameter :: aalpha = 0.3333333333  ! Elasticity of output w.r.t Capital
 real (8), parameter :: bbeta  = 0.95          ! Discount factor

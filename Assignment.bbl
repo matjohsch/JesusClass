@@ -1,0 +1,29 @@
+\begin{thebibliography}{}
+
+\bibitem[\protect\citeauthoryear{Aruoba, Fernandez-Villaverde, and
+  Rubio-Ramirez}{Aruoba et~al.}{2006}]{aruoba06}
+Aruoba, S.~B., J.~Fernandez-Villaverde, and J.~F. Rubio-Ramirez (2006).
+\newblock Comparing solution methods for dynamic equilibrium economies.
+\newblock {\em Journal of Economic Dynamics and Control\/}~{\em 30\/}(12),
+  2477--2508.
+
+\bibitem[\protect\citeauthoryear{Barillas and Fernandez-Villaverde}{Barillas
+  and Fernandez-Villaverde}{2007}]{Barillas07}
+Barillas, F. and J.~Fernandez-Villaverde (2007).
+\newblock A generalization of the endogenous grid method.
+\newblock {\em Journal of Economic Dynamics and Control\/}~{\em 31\/}(8),
+  2698--2712.
+
+\bibitem[\protect\citeauthoryear{Chow and Tsitsiklis}{Chow and
+  Tsitsiklis}{1991}]{Chow}
+Chow, C.~S. and J.~N. Tsitsiklis (1991).
+\newblock An optimal one-way multigrid algorithm for discrete-time
+  stochasticcontrol.
+\newblock {\em Automatic Control, IEEE Transactions on,\/}~{\em 36}, 898--914.
+
+\bibitem[\protect\citeauthoryear{Rust}{Rust}{1997}]{Rust}
+Rust, J. (1997).
+\newblock Using randomization to break the curse of dimensionality.
+\newblock {\em Econometrica\/}~{\em 65\/}(3), 487--516.
+
+\end{thebibliography}

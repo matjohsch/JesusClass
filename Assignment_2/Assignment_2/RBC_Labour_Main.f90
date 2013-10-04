@@ -13,7 +13,7 @@ use clock
 
 implicit none
 
-integer :: nGridOld, nGridNew, cMultigrid, nGrids, SteadyState
+integer :: nGridOld, nGridNew, cMultigrid, NGRIDS, SteadyState
 integer, dimension(:), allocatable:: nMultiGrid
 
 real (8) :: capital, labour, timeInSeconds
@@ -26,10 +26,10 @@ real (8), dimension(:,:), allocatable :: mValueFuctionSave, mValueFunction, mPol
 !----------------------------------------------------------------
 
 ! MULTIGRID SCHEME
-! nGrids:= How many grids implemented; nMultiGrid:= Define grid size in each step
-nGrids = 3
-allocate (nMultiGrid(nGrids))
-nMultiGrid = (/ 100, 1000, 200000 /)
+! NGRIDS:= How many grids implemented; nMultiGrid:= Define grid size in each step
+NGRIDS = 3
+allocate (nMultiGrid(NGRIDS))
+nMultiGrid = (/100, 1000, 25000 /)! , 250000
 
 ! INITIAL GUESS for Value function
 ! 1:= constant function equal zeros
@@ -53,7 +53,7 @@ ENDOGENOUS = 0
 
 Single=.false.       ! Using fixed Steady State Labour supply in EGM instead of no labour at all
 LabourSteady=.false. ! Only one Iteration in VFI - needed in EGM_Labour
-
+nGridProducts = nGridProductivity
 !----------------------------------------------------------------
 ! 1. Calibration
 !----------------------------------------------------------------
@@ -99,7 +99,7 @@ allocate (mValueFunction(nGridOld,nGridProductivity))
 allocate (mPolicyCapital(nGridOld,nGridProductivity))
 allocate (mPolicyLabour(nGridOld,nGridProductivity))
 allocate (mPolicyConsumption(nGridOld,nGridProductivity))
-
+call tic
 ! Initial Guess for Value Function
 if (INITIAL_GUESS == 1) then   
     mValueFunction = 0.0   
@@ -109,7 +109,8 @@ else
     ! Deterministic Version   
     vProductivity = (/1.0000, 1.0000, 1.0000, 1.0000, 1.0000/)     
     mValueFunction = 0.0  
-    nGridOld = nMultiGrid(1)    
+    nGridOld = nMultiGrid(1)  
+    nGridProducts = 1
     if (STOCHASTIC == 1) then
         call sub_makerandomgrid(lowcapital,highcapital,nGridOld,vGridCapital)
     else
@@ -123,13 +124,14 @@ else
     else
         call sub_makegrid(lowcapital,highcapital,nGridOld,curv,vGridCapital)
     end if
+    nGridProducts = nGridProductivity
 end if    
 
 !----------------------------------------------------------------
 ! 4. Main Iteration 
 !----------------------------------------------------------------
 
-call tic
+
 if (.not. ENDOGENOUS) then
     !----------------------------------------------------------------
     ! Value Function Iteration with a numerical solver (zbrent from numerical recipes) for the labour supply given capital choice
@@ -165,19 +167,19 @@ else
     !----------------------------------------------------------------
     ! Endogenous Grid Method
     !----------------------------------------------------------------
-    nGridNew = nMultigrid(3)
+    nGridNew = nMultigrid(1)
     deallocate (vGridCapital)
     deallocate (mPolicyCapital)
     deallocate (mPolicyLabour)
     deallocate (mPolicyConsumption)
     deallocate (mValueFunction)     
-    allocate   (vGridCapital(nMultigrid(3)))
-    allocate   (mPolicyConsumption(nMultigrid(3),nGridProductivity))
-    allocate   (mPolicyCapital(nMultigrid(3),nGridProductivity))
-    allocate   (mPolicyLabour(nMultigrid(3),nGridProductivity))
-    allocate   (mValueFunction(nMultigrid(3),nGridProductivity))
+    allocate   (vGridCapital(nGridNew))
+    allocate   (mPolicyConsumption(nGridNew,nGridProductivity))
+    allocate   (mPolicyCapital(nGridNew,nGridProductivity))
+    allocate   (mPolicyLabour(nGridNew,nGridProductivity))
+    allocate   (mValueFunction(nGridNew,nGridProductivity))
     
-    call sub_RBC_EGM_labour(nMultigrid(3), vGridCapital, mValueFunction, mPolicyConsumption, mPolicyCapital, mPolicyLabour)
+    call sub_RBC_EGM_labour(nGridNew, vGridCapital, mValueFunction, mPolicyConsumption, mPolicyCapital, mPolicyLabour)
 end if
 call toc
 
